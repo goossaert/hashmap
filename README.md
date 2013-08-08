@@ -1,4 +1,4 @@
 hashmap
 =======
 
-Implementation of some hashmap algorithms in C++
+Implementation of some hash table algorithms in C++
