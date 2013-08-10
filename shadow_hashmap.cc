@@ -1,6 +1,6 @@
 #include "shadow_hashmap.h"
 
-namespace hhash {
+namespace hashmap {
 
 
 int ShadowHashMap::Open() {

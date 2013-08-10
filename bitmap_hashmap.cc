@@ -1,6 +1,6 @@
 #include "bitmap_hashmap.h"
 
-namespace hhash {
+namespace hashmap {
 
 
 

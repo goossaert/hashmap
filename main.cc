@@ -87,11 +87,11 @@ int main(int argc, char **argv) {
 
   int num_items = num_buckets;
   //int num_items = NearestPowerOfTwo(num_buckets);
-  hhash::HashMap *bhm;
+  hashmap::HashMap *bhm;
   if (algorithm == "bitmap") {
-    bhm = new hhash::BitmapHashMap(num_items, size_probing);
+    bhm = new hashmap::BitmapHashMap(num_items, size_probing);
   } else if (algorithm == "shadow") {
-    bhm = new hhash::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
+    bhm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
     exit(-1); 

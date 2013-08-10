@@ -7,7 +7,7 @@
 #include "murmurhash3.h"
 #include "hamming.h"
 
-namespace hhash
+namespace hashmap
 {
 
 class HashMap
@@ -30,6 +30,6 @@ public:
   virtual int BucketCounts() = 0;
 };
 
-}; // end namespace hhash
+}; // end namespace hashmap
 
 #endif // HASHMAP

@@ -13,7 +13,7 @@
 #include "hamming.h"
 #include "hashmap.h"
 
-namespace hhash
+namespace hashmap
 {
 
 
@@ -83,6 +83,6 @@ private:
 };
 
 
-}; // end namespace hhash
+}; // end namespace hashmap
 
 #endif // HOPSCOTCHHASH_SHADOW
