@@ -15,28 +15,59 @@ std::string concatenate(std::string const& str, int i)
 }
 
  
-uint32_t NearestPowerOfTwo(const uint32_t i)	{
-  uint32_t rc = 1;
-  while (rc < i) {
-    rc <<= 1;
+uint32_t NearestPowerOfTwo(const uint32_t number)	{
+  uint32_t power = 1;
+  while (power < number) {
+    power <<= 1;
   }
-  return rc;
+  return power;
 }
 
 
+void show_usage() {
+  fprintf(stdout, "Test program for implementations of open addressing hash table algorithms.\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "General parameters (mandatory):\n");
+  fprintf(stdout, " --algo            algorithm to use for the hash table. Possible values are:\n");
+  fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
+  fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "Parameters for bitmap algorithm (optional):\n");
+  fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
+  fprintf(stdout, " --size_probing    maximum number of buckets used in the linear probing (default=4096)\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "Parameters for shadow algorithm (optional):\n");
+  fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
+  fprintf(stdout, " --size_probing    maximum number of buckets used in the linear probing (default=4096)\n");
+  fprintf(stdout, " --size_nh_start   starting size of the neighborhoods (default=32)\n");
+  fprintf(stdout, " --size_nh_end     ending size of the neighborhoods (default=32)\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "Examples:\n");
+  fprintf(stdout, "./hashmap --algo bitmap --num_buckets 1000000\n");
+  fprintf(stdout, "./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64\n");
+}
+
 
 int main(int argc, char **argv) {
-  std::cout << "Hi there!" << std::endl;
+  if (argc == 1 || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
+    show_usage(); 
+    exit(-1);
+  }
 
-  if (argc < 2) {
+  if (argc % 2 == 0) {
     std::cerr << "Error: invalid number of arguments" << std::endl; 
+    exit(-1);
   }
 
   uint32_t size_neighborhood_start = 32;
   uint32_t size_neighborhood_end = 32;
   uint32_t size_probing = 4096;
-  uint32_t num_buckets = 10;
-  std::string algorithm = "bitmap";
+  uint32_t num_buckets = 10000;
+  std::string algorithm = "";
 
   if (argc > 2) {
     for (int i = 1; i < argc; i += 2 ) {
@@ -54,8 +85,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  int num_items = NearestPowerOfTwo(num_buckets);
-  int num_items_test = num_items;
+  int num_items = num_buckets;
+  //int num_items = NearestPowerOfTwo(num_buckets);
   hhash::HashMap *bhm;
   if (algorithm == "bitmap") {
     bhm = new hhash::BitmapHashMap(num_items, size_probing);
@@ -69,78 +100,39 @@ int main(int argc, char **argv) {
   bhm->Open();
   std::string value_out("value_out");
 
-  //std::string key("key0002");
-  //std::string value("Hello man, how are you!");
+  int num_items_reached = 0;
 
-  //bhm->Put(key, value);
-  //bhm->Get(key, &value_out);
-
-
-  for( int i = 0; i < num_items_test; i++ ) {
-    if( i == 9364 ) {
-      value_out = "value_out";
-    }
+  for (int i = 0; i < num_items; i++) {
     value_out = "value_out";
     std::string key = concatenate( "key", i );
     std::string value = concatenate( "value", i );
     int ret_put = bhm->Put(key, value);
-    int ret_get = bhm->Get(key, &value_out);
-    //std::cout << ret_put << " | " << ret_get << std::endl;
-    //std::cout << "Out: " << key << " | " << value_out << std::endl;
-    if( i == 20 || i == 100 || i == 130 ) {
-      //std::cout << "DUMP - " << i << std::endl;
-      //bhm->Dump();
-    }
+    bhm->Get(key, &value_out);
 
     if (ret_put != 0) {
-      std::cout << "error in put at step: " << i << std::endl; 
-      std::cout << "load factor: " << (double)i/num_items << std::endl; 
+      std::cout << "Insertion stopped due to clustering at step: " << i << std::endl; 
+      std::cout << "Load factor: " << (double)i/num_items << std::endl; 
+      num_items_reached = i;
       break;
     }
-
-    if (ret_get != 0) {
-      std::cout << "error in get at step: " << i << std::endl; 
-      break;
-    }
-
-    //if (i % step == 0) {
-    //  std::cout << "key: " << i << " - out: " << value_out << std::endl;
-    //  std::cout << "status:" << s.ToString() << std::endl;
-    //}
-    
-    
-    //if (i % 10000 == 0) {
-    //  std::cout << "step: " << i << std::endl; 
-    //}
-
-    if (i % 2000000 == 0) { // || (i > num_items_test - 700 && i % 1 == 0)) {
-      std::cout << "check: " << i << std::endl; 
-      for (int j = 0; j <= i; j++) {
-        value_out = "value_out";
-        std::string key = concatenate( "key", j );
-        int ret_get = bhm->Get(key, &value_out);
-        std::string value_out_cmp = concatenate( "value", j );
-        if (ret_get != 0 || value_out_cmp != value_out) {
-          std::cout << "Error at id [" << i << "] with key [" << j << "]" << std::endl; 
-          exit(-1);
-        }
-        //std::cout << "Out: " << key << " | " << value_out << std::endl;
-      }
-    }
-
   }
 
 
-  std::cout << "Final Check: " << std::endl;
-  for( int i = 0; i < num_items_test; i++ ) {
+  bool has_error = false;
+  for (int i = 0; i < num_items_reached; i++) {
     value_out = "value_out";
     std::string key = concatenate( "key", i );
+    std::string value = concatenate( "value", i );
     int ret_get = bhm->Get(key, &value_out);
-    if (ret_get != 0) {
-      std::cout << "Error at id [" << i << "]" << std::endl; 
+    if (ret_get != 0 || value != value_out) {
+      std::cout << "Final check: error at step [" << i << "]" << std::endl; 
+      has_error = true;
       break;
     }
-    //std::cout << "Out: " << key << " | " << value_out << std::endl;
+  }
+
+  if (!has_error) {
+      std::cout << "Final check: OK" << std::endl; 
   }
 
   //bhm->CheckDensity();

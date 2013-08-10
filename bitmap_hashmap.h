@@ -26,7 +26,7 @@ public:
                 uint64_t size_probing
                ) {
     buckets_ = NULL;
-    num_buckets_ = NearestPowerOfTwo(size);
+    num_buckets_ = size;
     size_neighborhood_ = 32;
     size_probing_ = size_probing;
   }
@@ -54,6 +54,7 @@ public:
   int Put(const std::string& key, const std::string& value);
   int Exists(const std::string& key);
   int Remove(const std::string& key);
+  int Resize();
   int Dump();
   int CheckDensity();
   int BucketCounts();
@@ -74,17 +75,7 @@ private:
     //std::cout << output << std::endl;
     return output;
   }
-
-  
-  static uint32_t NearestPowerOfTwo(const uint32_t i)	{
-    uint32_t rc = 1;
-    while (rc < i) {
-      rc <<= 1;
-    }
-    return rc;
-  }
-
-
+ 
 };
 
 

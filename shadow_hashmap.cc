@@ -2,29 +2,10 @@
 
 namespace hhash {
 
-int ShadowHashMap::CheckDensity() {
-}
-
-
-int ShadowHashMap::BucketCounts() {
-
-  std::cout << "current neighborhood: " << size_neighborhood_ << std::endl;
-
-}
-
-
-int ShadowHashMap::Dump() {
-}
-
-
 
 int ShadowHashMap::Open() {
-  std::cout << "open enter" << std::endl;
-  std::cout << "allocate memory" << std::endl;
   buckets_ = new Bucket[num_buckets_ + size_neighborhood_];
-  std::cout << "allocate ok" << std::endl;
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_ + size_neighborhood_));
-
   return 0;
 }
 
@@ -66,7 +47,6 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
   }
 
   if (!found) {
-    std::cerr << "Put(): cannot resize" << std::endl; 
     return num_buckets_;
   }
 
@@ -94,15 +74,16 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     if (!found_swap) {
       if (size_neighborhood_ < size_neighborhood_max_) {
         size_neighborhood_ *= 2;
-        std::cerr << "Increasing neighborhood, now " << size_neighborhood_ << std::endl;
+        //std::cerr << "Increasing neighborhood, now " << size_neighborhood_ << std::endl;
       } else {
+        // For debugging only, dump of the area around the neighborhood
         if (false) {
           fprintf(stderr, "index [%llu] empty [%llu]\n", index_init, index_empty);
           uint32_t index_temp = index_empty - size_neighborhood_ + 1;
           if (index_temp > index_init) index_temp = index_init;
           index_temp -= 20;
           if (index_temp < 0) index_temp = 0;
-          for (index_temp; index_temp <= index_empty + 20; index_temp++) {
+          for (; index_temp <= index_empty + 20; index_temp++) {
             if (index_temp == index_empty - size_neighborhood_ + 1) {
               fprintf(stderr, "neigh ");
             } else if (index_temp == index_init) {
@@ -113,7 +94,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
               fprintf(stderr, "      ");
             }
 
-            fprintf(stderr, " %7lu ", index_temp);
+            fprintf(stderr, " %7du ", index_temp);
 
             if (buckets_[index_temp % num_buckets_].entry == NULL) {
               fprintf(stderr, "    EMP");
@@ -124,7 +105,6 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
           }
           fprintf(stderr, "\n");
         }
-        std::cerr << "Put(): cannot resize" << std::endl;
         return num_buckets_;
       }
     }
@@ -158,10 +138,34 @@ int ShadowHashMap::Put(const std::string& key, const std::string& value) {
 }
 
 int ShadowHashMap::Exists(const std::string& key) {
+  // TODO: implement
   return 0;
 }
 
 int ShadowHashMap::Remove(const std::string& key) {
+  // TODO: implement
+  return 0;
+}
+
+int ShadowHashMap::Resize() {
+  // TODO: implement
+  return 0;
+}
+
+
+// For debugging
+int ShadowHashMap::CheckDensity() {
+  return 0;
+}
+
+
+int ShadowHashMap::BucketCounts() {
+  std::cout << "current neighborhood: " << size_neighborhood_ << std::endl;
+  return 0;
+}
+
+
+int ShadowHashMap::Dump() {
   return 0;
 }
 

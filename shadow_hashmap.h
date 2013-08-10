@@ -28,7 +28,7 @@ public:
                 uint64_t size_neighborhood_end
                ) {
     buckets_ = NULL;
-    num_buckets_ = NearestPowerOfTwo(size);
+    num_buckets_ = size;
     size_neighborhood_ = size_neighborhood_start;
     size_neighborhood_max_ = size_neighborhood_end;
     size_probing_ = size_probing;
@@ -57,6 +57,7 @@ public:
   int Put(const std::string& key, const std::string& value);
   int Exists(const std::string& key);
   int Remove(const std::string& key);
+  int Resize();
   int Dump();
   int CheckDensity();
   int BucketCounts();
@@ -73,14 +74,6 @@ private:
     MurmurHash3_x64_128(key.c_str(), key.size(), 0, hash);
     memcpy(&output, hash, 8); 
     return output;
-  }
-
-  static uint32_t NearestPowerOfTwo(const uint32_t i)	{
-    uint32_t rc = 1;
-    while (rc < i) {
-      rc <<= 1;
-    }
-    return rc;
   }
 
   uint32_t size_neighborhood_;
