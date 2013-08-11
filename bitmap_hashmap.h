@@ -1,10 +1,11 @@
-#ifndef HOPSCOTCHHASH_BITMAP
-#define HOPSCOTCHHASH_BITMAP
+#ifndef HASHMAP_BITMAP
+#define HASHMAP_BITMAP
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
+#include <string.h>
 
 #include <string>
 #include <iostream>
@@ -81,4 +82,4 @@ private:
 
 }; // end namespace hashmap
 
-#endif // HOPSCOTCHHASH_BITMAP
+#endif // HASHMAP_BITMAP

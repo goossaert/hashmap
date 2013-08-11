@@ -1,10 +1,12 @@
-#ifndef HOPSCOTCHHASH_SHADOW
-#define HOPSCOTCHHASH_SHADOW
+#ifndef HASHMAP_SHADOW
+#define HASHMAP_SHADOW
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <string>
 #include <iostream>
@@ -85,4 +87,4 @@ private:
 
 }; // end namespace hashmap
 
-#endif // HOPSCOTCHHASH_SHADOW
+#endif // HASHMAP_SHADOW

@@ -1,5 +1,5 @@
-#ifndef HOPSCOTCHHASH_HAMMING
-#define HOPSCOTCHHASH_HAMMING
+#ifndef HASHMAP_HAMMING
+#define HASHMAP_HAMMING
 #include <sys/types.h>
 #include <stdint.h>
 

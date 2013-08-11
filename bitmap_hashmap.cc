@@ -106,9 +106,9 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
 
   uint32_t mask;
   if (index_empty >= index_init) {
-    mask = 1 << size_neighborhood_ - ((index_empty - index_init) + 1);
+    mask = 1 << (size_neighborhood_ - ((index_empty - index_init) + 1));
   } else {
-    mask = 1 << size_neighborhood_ - ((index_empty + num_buckets_ - index_init) + 1);
+    mask = 1 << (size_neighborhood_ - ((index_empty + num_buckets_ - index_init) + 1));
   }
   buckets_[index_init].bitmap |= mask; 
 

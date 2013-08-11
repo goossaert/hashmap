@@ -1,10 +1,12 @@
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <stdlib.h>
+
 #include "hashmap.h"
 #include "bitmap_hashmap.h"
 #include "shadow_hashmap.h"
 
-#include <string>
-#include <sstream>
 
 
 std::string concatenate(std::string const& str, int i)
