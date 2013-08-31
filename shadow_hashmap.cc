@@ -4,8 +4,8 @@ namespace hashmap {
 
 
 int ShadowHashMap::Open() {
-  buckets_ = new Bucket[num_buckets_ + size_neighborhood_];
-  memset(buckets_, 0, sizeof(Bucket) * (num_buckets_ + size_neighborhood_));
+  buckets_ = new Bucket[num_buckets_];
+  memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
   return 0;
 }
 
