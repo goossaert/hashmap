@@ -159,12 +159,17 @@ void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >
   for (uint64_t index_stored = 0; index_stored < num_buckets_; index_stored++) {
     uint64_t index_init;
     for (int i = 0; i < 6; i++) {
+      // OPTIMIZE: offset_end is being recomputed and doesn't need to
+      uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
       if (hm->FillInitIndex(index_stored, &index_init) != 0) continue;
-      fprintf(stdout, "%d\n", i);
       uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
       uint64_t offset_stored = AlignOffsetToBlock(index_stored * size_bucket_, size_blocks[i]);
-      //if (offset_init < offset_stored)
-      uint64_t num_blocks = offset_stored - offset_init;
+      uint64_t num_blocks;
+      if (offset_init <= offset_stored) {
+        num_blocks = offset_stored - offset_init;
+      } else {
+        num_blocks = offset_end - offset_init + offset_stored;
+      }
       it_find = out_num_scanned_blocks[i].find(num_blocks);
       if (it_find == out_num_scanned_blocks[i].end()) {
         out_num_scanned_blocks[i][num_blocks] = 0;
@@ -178,10 +183,6 @@ void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >
 void Monitoring::PrintNumScannedBlocks(HashMap *hm) {
   fprintf(stdout, "PrintNumScannedBlocks\n");
   std::vector< std::map<uint64_t, uint64_t> > num_scanned_blocks(6);
-  for (int i = 0; i < 6; i++) {
-    fprintf(stdout, "blah %d\n", i);
-    //num_scanned_blocks.insert( std::map<uint64_t, uint64_t>() );
-  }
   GetNumScannedBlocks(num_scanned_blocks, hm);
   int size_blocks[6] = { 1, 8, 16, 32, 64, 128 };
   for (int i = 0; i < 6; i++) {
