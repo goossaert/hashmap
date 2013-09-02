@@ -7,6 +7,7 @@ namespace hashmap {
 int BitmapHashMap::Open() {
   buckets_ = new Bucket[num_buckets_ + size_neighborhood_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_ + size_neighborhood_));
+  monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_);
   return 0;
 }
 
@@ -82,6 +83,14 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     }
   }
 
+  uint64_t psl;
+  if (index_empty >= index_init) {
+    psl = index_empty - index_init;
+  } else {
+    psl = index_empty + num_buckets_ - index_init;
+  }
+  monitoring_->SetProbingSequenceLengthSearch(index_empty, psl);
+
   return index_empty;
 }
 
@@ -111,6 +120,8 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
     mask = 1 << (size_neighborhood_ - ((index_empty + num_buckets_ - index_init) + 1));
   }
   buckets_[index_init].bitmap |= mask; 
+
+  monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;
 }
@@ -225,6 +236,14 @@ int BitmapHashMap::Dump() {
 
 
 
+
+int BitmapHashMap::GetBucketState(int index) {
+  if (buckets_[index].entry == NULL) {
+    return 0;
+  }
+
+  return 1;
+}
 
 
 

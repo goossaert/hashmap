@@ -6,6 +6,7 @@
 #include "hashmap.h"
 #include "bitmap_hashmap.h"
 #include "shadow_hashmap.h"
+#include "probing_hashmap.h"
 
 
 
@@ -34,6 +35,7 @@ void show_usage() {
   fprintf(stdout, " --algo            algorithm to use for the hash table. Possible values are:\n");
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
+  fprintf(stdout, "                     * probing: hopscotch hashing with shadow representation\n");
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for bitmap algorithm (optional):\n");
@@ -89,17 +91,19 @@ int main(int argc, char **argv) {
 
   int num_items = num_buckets;
   //int num_items = NearestPowerOfTwo(num_buckets);
-  hashmap::HashMap *bhm;
+  hashmap::HashMap *hm;
   if (algorithm == "bitmap") {
-    bhm = new hashmap::BitmapHashMap(num_items, size_probing);
+    hm = new hashmap::BitmapHashMap(num_items, size_probing);
   } else if (algorithm == "shadow") {
-    bhm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
+    hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
+  } else if (algorithm == "probing") {
+    hm = new hashmap::ProbingHashMap(num_items, 50);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
     exit(-1); 
   }
 
-  bhm->Open();
+  hm->Open();
   std::string value_out("value_out");
 
   int num_items_reached = 0;
@@ -108,8 +112,8 @@ int main(int argc, char **argv) {
     value_out = "value_out";
     std::string key = concatenate( "key", i );
     std::string value = concatenate( "value", i );
-    int ret_put = bhm->Put(key, value);
-    bhm->Get(key, &value_out);
+    int ret_put = hm->Put(key, value);
+    hm->Get(key, &value_out);
 
     if (ret_put != 0) {
       std::cout << "Insertion stopped due to clustering at step: " << i << std::endl; 
@@ -125,7 +129,7 @@ int main(int argc, char **argv) {
     value_out = "value_out";
     std::string key = concatenate( "key", i );
     std::string value = concatenate( "value", i );
-    int ret_get = bhm->Get(key, &value_out);
+    int ret_get = hm->Get(key, &value_out);
     if (ret_get != 0 || value != value_out) {
       std::cout << "Final check: error at step [" << i << "]" << std::endl; 
       has_error = true;
@@ -137,8 +141,19 @@ int main(int argc, char **argv) {
       std::cout << "Final check: OK" << std::endl; 
   }
 
-  //bhm->CheckDensity();
-  //bhm->BucketCounts();
+  if (hm->monitoring_ != NULL) {
+      std::cout << "Monitoring: OK" << std::endl; 
+      hm->monitoring_->PrintDensity();
+  }
+
+  std::cout << "Clustering" << std::endl; 
+  hm->monitoring_->PrintClustering(hm);
+
+  hm->monitoring_->PrintProbingSequenceLengthSearch();
+  hm->monitoring_->PrintNumScannedBlocks(hm);
+
+  //hm->CheckDensity();
+  //hm->BucketCounts();
 
   return 0;
 }

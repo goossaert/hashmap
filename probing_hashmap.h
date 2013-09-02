@@ -1,11 +1,12 @@
-#ifndef HASHMAP_BITMAP
-#define HASHMAP_BITMAP
+#ifndef HASHMAP_PROBING
+#define HASHMAP_PROBING
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <string>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include "murmurhash3.h"
 #include "hamming.h"
 #include "hashmap.h"
+
 #include "monitoring.h"
 
 namespace hashmap
@@ -20,20 +22,20 @@ namespace hashmap
 
 
 
-class BitmapHashMap: public HashMap
+class ProbingHashMap: public HashMap
 {
 public:
 
-  BitmapHashMap(uint64_t size,
-                uint64_t size_probing
-               ) {
+  ProbingHashMap(uint64_t size,
+                 int      probing_max) {
     buckets_ = NULL;
     num_buckets_ = size;
-    size_neighborhood_ = 32;
-    size_probing_ = size_probing;
+    HASH_DELETED_BUCKET = 1;
+    probing_max_ = probing_max;
+    monitoring_ = new hashmap::Monitoring(num_buckets_, probing_max_);
   }
 
-  virtual ~BitmapHashMap() {
+  virtual ~ProbingHashMap() {
   }
 
   int Open();
@@ -47,7 +49,7 @@ public:
 
   struct Bucket
   {
-    uint32_t bitmap;
+    uint64_t hash;
     struct Entry* entry;
   };
 
@@ -61,12 +63,11 @@ public:
   int CheckDensity();
   int BucketCounts();
   int GetBucketState(int index);
+  int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
 
 private:
   Bucket* buckets_;
   uint64_t num_buckets_;
-  uint32_t size_neighborhood_;
-  uint32_t size_probing_;
 
   uint64_t FindEmptyBucket(uint64_t index_init);
 
@@ -75,13 +76,16 @@ private:
     static uint64_t output;
     MurmurHash3_x64_128(key.c_str(), key.size(), 0, hash);
     memcpy(&output, hash, 8); 
-    //std::cout << output << std::endl;
     return output;
   }
- 
+
+
+  uint32_t probing_max_;
+  uint64_t HASH_DELETED_BUCKET;
+
 };
 
 
 }; // end namespace hashmap
 
-#endif // HASHMAP_BITMAP
+#endif // HASHMAP_PROBING

@@ -14,6 +14,7 @@
 #include "murmurhash3.h"
 #include "hamming.h"
 #include "hashmap.h"
+#include "monitoring.h"
 
 namespace hashmap
 {
@@ -34,6 +35,7 @@ public:
     size_neighborhood_ = size_neighborhood_start;
     size_neighborhood_max_ = size_neighborhood_end;
     size_probing_ = size_probing;
+    monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_max_);
   }
 
   virtual ~ShadowHashMap() {
@@ -63,6 +65,7 @@ public:
   int Dump();
   int CheckDensity();
   int BucketCounts();
+  int GetBucketState(int index);
 
 private:
   Bucket* buckets_;

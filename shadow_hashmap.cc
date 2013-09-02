@@ -110,6 +110,9 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     }
   }
 
+  monitoring_->SetProbingSequenceLengthSearch(index_empty % num_buckets_,
+                                              index_empty - index_init);
+
   return index_empty % num_buckets_;
 }
 
@@ -133,6 +136,8 @@ int ShadowHashMap::Put(const std::string& key, const std::string& value) {
   entry->data = data;
   buckets_[index_empty].entry = entry;
   buckets_[index_empty].hash = hash;
+
+  monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;
 }
@@ -167,6 +172,16 @@ int ShadowHashMap::BucketCounts() {
 
 int ShadowHashMap::Dump() {
   return 0;
+}
+
+
+int ShadowHashMap::GetBucketState(int index) {
+  if (buckets_[index].entry == NULL) {
+    return 0;
+  }
+
+  return 1;
+
 }
 
 

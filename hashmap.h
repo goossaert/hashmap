@@ -7,14 +7,18 @@
 #include "murmurhash3.h"
 #include "hamming.h"
 
+
 namespace hashmap
 {
+
+class Monitoring;
 
 class HashMap
 {
 public:
 
   HashMap() {
+    monitoring_ = NULL;
   }
 
   virtual ~HashMap() {
@@ -28,6 +32,10 @@ public:
   virtual int Dump() = 0;
   virtual int CheckDensity() = 0;
   virtual int BucketCounts() = 0;
+  virtual int GetBucketState(int index) = 0;
+  virtual int FillInitIndex(uint64_t index_stored, uint64_t *index_init) { return 0; }
+
+  Monitoring *monitoring_;
 };
 
 }; // end namespace hashmap
