@@ -181,6 +181,8 @@ void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >
 
 
 void Monitoring::PrintNumScannedBlocks(HashMap *hm) {
+  // TODO: fix bug that can be reached with:
+  // ./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64
   fprintf(stdout, "PrintNumScannedBlocks\n");
   std::vector< std::map<uint64_t, uint64_t> > num_scanned_blocks(6);
   GetNumScannedBlocks(num_scanned_blocks, hm);

@@ -88,17 +88,43 @@ int ProbingHashMap::Put(const std::string& key, const std::string& value) {
 }
 
 
-
-
 int ProbingHashMap::Exists(const std::string& key) {
   // TODO: implement
   return 0;
 }
 
+
 int ProbingHashMap::Remove(const std::string& key) {
-  // TODO: implement
-  return 0;
+  uint64_t hash = hash_function(key);
+  uint64_t index_init = hash % num_buckets_;
+
+  bool found = false;
+  uint64_t index_current;
+
+  for (uint32_t i = 0; i < probing_max_; i++) {
+    index_current = (index_init + i) % num_buckets_;
+    if (buckets_[index_current].hash == HASH_DELETED_BUCKET) {
+      continue;
+    } else if (buckets_[index_current].entry == NULL) {
+      break;
+    } else if (   key.size() == buckets_[index_current].entry->size_key
+               && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
+      found = true;
+      break;
+    }
+  }
+
+  if (found) {
+    delete[] buckets_[index_current].entry->data;
+    delete buckets_[index_current].entry;
+    buckets_[index_current].hash  = HASH_DELETED_BUCKET;
+    buckets_[index_current].entry = NULL;
+    return 0;
+  }
+
+  return 1;
 }
+
 
 int ProbingHashMap::Resize() {
   // TODO: implement

@@ -57,6 +57,8 @@ void show_usage() {
 
 
 int main(int argc, char **argv) {
+  bool has_error;
+
   if (argc == 1 || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
     show_usage(); 
     exit(-1);
@@ -97,7 +99,7 @@ int main(int argc, char **argv) {
   } else if (algorithm == "shadow") {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else if (algorithm == "probing") {
-    hm = new hashmap::ProbingHashMap(num_items, 50);
+    hm = new hashmap::ProbingHashMap(num_items, 500);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
     exit(-1); 
@@ -124,7 +126,7 @@ int main(int argc, char **argv) {
   }
 
 
-  bool has_error = false;
+  has_error = false;
   for (int i = 0; i < num_items_reached; i++) {
     value_out = "value_out";
     std::string key = concatenate( "key", i );
@@ -141,6 +143,30 @@ int main(int argc, char **argv) {
       std::cout << "Final check: OK" << std::endl; 
   }
 
+
+  has_error = false;
+  for (int i = 0; i < num_items_reached; i++) {
+    std::string key = concatenate( "key", i );
+    std::string value = concatenate( "value", i );
+    int ret_remove = hm->Remove(key);
+    if (ret_remove != 0) {
+      std::cout << "Remove: error at step [" << i << "]" << std::endl; 
+      has_error = true;
+      break;
+    }
+    int ret_get = hm->Get(key, &value_out);
+    if (ret_get == 0) {
+      std::cout << "Remove: error at step [" << i << "] -- can get after remove" << std::endl; 
+      has_error = true;
+      break;
+    }
+  }
+
+  if (!has_error) {
+      std::cout << "Removing items: OK" << std::endl; 
+  }
+
+  /*
   if (hm->monitoring_ != NULL) {
       std::cout << "Monitoring: OK" << std::endl; 
       hm->monitoring_->PrintDensity();
@@ -152,8 +178,9 @@ int main(int argc, char **argv) {
   hm->monitoring_->PrintProbingSequenceLengthSearch();
   hm->monitoring_->PrintNumScannedBlocks(hm);
 
-  //hm->CheckDensity();
-  //hm->BucketCounts();
+  hm->CheckDensity();
+  hm->BucketCounts();
+  */
 
   return 0;
 }

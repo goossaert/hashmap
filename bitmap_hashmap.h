@@ -61,6 +61,8 @@ public:
   int CheckDensity();
   int BucketCounts();
   int GetBucketState(int index);
+  int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
+
 
 private:
   Bucket* buckets_;

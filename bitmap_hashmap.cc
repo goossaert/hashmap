@@ -126,15 +126,42 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
   return 0;
 }
 
+
 int BitmapHashMap::Exists(const std::string& key) {
   // TODO: implement
   return 0;
 }
 
+
 int BitmapHashMap::Remove(const std::string& key) {
-  // TODO: implement
-  return 0;
+  uint64_t hash = hash_function(key);
+  uint64_t index_init = hash % num_buckets_;
+  uint32_t mask = 1 << (size_neighborhood_-1);
+  bool found = false;
+  uint64_t index_current;
+  for (uint32_t i = 0; i < size_neighborhood_; i++) {
+    if (buckets_[index_init].bitmap & mask) {
+      index_current = (index_init + i) % num_buckets_;
+      if (   key.size() == buckets_[index_current].entry->size_key
+          && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
+        found = true;
+        break;
+      }
+    }
+    mask = mask >> 1;
+  }
+
+  if (found) {
+    delete[] buckets_[index_current].entry->data;
+    delete buckets_[index_current].entry;
+    buckets_[index_current].entry = NULL;
+    buckets_[index_init].bitmap = buckets_[index_init].bitmap & (~mask);
+    return 0;
+  }
+
+  return 1;
 }
+
 
 int BitmapHashMap::Resize() {
   // TODO: implement
@@ -243,6 +270,15 @@ int BitmapHashMap::GetBucketState(int index) {
   }
 
   return 1;
+}
+
+
+int BitmapHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
+  if(buckets_[index_stored].entry == NULL) return -1;
+  std::string key(buckets_[index_stored].entry->data,
+                  buckets_[index_stored].entry->size_key);
+  *index_init = hash_function(key) % num_buckets_;
+  return 0;
 }
 
 

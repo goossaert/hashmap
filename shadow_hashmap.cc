@@ -148,7 +148,27 @@ int ShadowHashMap::Exists(const std::string& key) {
 }
 
 int ShadowHashMap::Remove(const std::string& key) {
-  // TODO: implement
+  uint64_t hash = hash_function(key);
+  uint64_t index_init = hash % num_buckets_;
+  bool found = false;
+  uint64_t index_current;
+  for (uint32_t i = 0; i < size_neighborhood_; i++) {
+    index_current = (index_init + i) % num_buckets_;
+    if (   buckets_[index_current].entry != NULL
+        && key.size() == buckets_[index_current].entry->size_key
+        && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
+      found = true;
+      break;
+    }
+  }
+
+  if (found) {
+    delete[] buckets_[index_current].entry->data;
+    delete buckets_[index_current].entry;
+    buckets_[index_current].entry = NULL;
+    return 0;
+  }
+
   return 0;
 }
 
@@ -183,6 +203,15 @@ int ShadowHashMap::GetBucketState(int index) {
   return 1;
 
 }
+
+int ShadowHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
+  if(buckets_[index_stored].entry == NULL) return -1;
+  std::string key(buckets_[index_stored].entry->data,
+                  buckets_[index_stored].entry->size_key);
+  *index_init = hash_function(key) % num_buckets_;
+  return 0;
+}
+
 
 
 };
