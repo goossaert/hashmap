@@ -144,6 +144,23 @@ int main(int argc, char **argv) {
   }
 
 
+  if (hm->monitoring_ != NULL) {
+      std::cout << "Monitoring: OK" << std::endl; 
+  }
+
+  hm->monitoring_->PrintDensity("density.json");
+  /*
+  std::cout << "Clustering" << std::endl; 
+  hm->monitoring_->PrintClustering(hm);
+
+  hm->monitoring_->PrintProbingSequenceLengthSearch();
+  */
+  hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
+
+  //hm->CheckDensity();
+  //hm->BucketCounts();
+  
+
   has_error = false;
   for (int i = 0; i < num_items_reached; i++) {
     std::string key = concatenate( "key", i );
@@ -166,21 +183,6 @@ int main(int argc, char **argv) {
       std::cout << "Removing items: OK" << std::endl; 
   }
 
-  /*
-  if (hm->monitoring_ != NULL) {
-      std::cout << "Monitoring: OK" << std::endl; 
-      hm->monitoring_->PrintDensity();
-  }
-
-  std::cout << "Clustering" << std::endl; 
-  hm->monitoring_->PrintClustering(hm);
-
-  hm->monitoring_->PrintProbingSequenceLengthSearch();
-  hm->monitoring_->PrintNumScannedBlocks(hm);
-
-  hm->CheckDensity();
-  hm->BucketCounts();
-  */
 
   return 0;
 }

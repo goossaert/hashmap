@@ -6,6 +6,7 @@ namespace hashmap {
 int ShadowHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
+  monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_max_, static_cast<HashMap*>(this));
   return 0;
 }
 
@@ -210,6 +211,11 @@ int ShadowHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
                   buckets_[index_stored].entry->size_key);
   *index_init = hash_function(key) % num_buckets_;
   return 0;
+}
+
+
+void ShadowHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
+  metadata["name"] = "shadow";
 }
 
 

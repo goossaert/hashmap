@@ -32,7 +32,6 @@ public:
     num_buckets_ = size;
     HASH_DELETED_BUCKET = 1;
     probing_max_ = probing_max;
-    monitoring_ = new hashmap::Monitoring(num_buckets_, probing_max_);
   }
 
   virtual ~ProbingHashMap() {
@@ -64,6 +63,7 @@ public:
   int BucketCounts();
   int GetBucketState(int index);
   int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
+  void GetMetadata(std::map< std::string, std::string >& metadata);
 
 private:
   Bucket* buckets_;

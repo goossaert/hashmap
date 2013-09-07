@@ -62,6 +62,7 @@ public:
   int BucketCounts();
   int GetBucketState(int index);
   int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
+  void GetMetadata(std::map< std::string, std::string >& metadata);
 
 
 private:

@@ -35,7 +35,6 @@ public:
     size_neighborhood_ = size_neighborhood_start;
     size_neighborhood_max_ = size_neighborhood_end;
     size_probing_ = size_probing;
-    monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_max_);
   }
 
   virtual ~ShadowHashMap() {
@@ -67,6 +66,7 @@ public:
   int BucketCounts();
   int GetBucketState(int index);
   int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
+  void GetMetadata(std::map< std::string, std::string >& metadata);
 
 
 private:

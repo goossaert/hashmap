@@ -7,6 +7,7 @@ namespace hashmap {
 int ProbingHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
+  monitoring_ = new hashmap::Monitoring(num_buckets_, probing_max_, static_cast<HashMap*>(this));
   return 0;
 }
 
@@ -164,6 +165,9 @@ int ProbingHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
 }
 
 
+void ProbingHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
+  metadata["name"] = "probing";
+}
 
 
 }; // end namespace hashmap

@@ -7,7 +7,7 @@ namespace hashmap {
 int BitmapHashMap::Open() {
   buckets_ = new Bucket[num_buckets_ + size_neighborhood_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_ + size_neighborhood_));
-  monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_);
+  monitoring_ = new hashmap::Monitoring(num_buckets_, size_neighborhood_, static_cast<HashMap*>(this));
   return 0;
 }
 
@@ -279,6 +279,11 @@ int BitmapHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
                   buckets_[index_stored].entry->size_key);
   *index_init = hash_function(key) % num_buckets_;
   return 0;
+}
+
+
+void BitmapHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
+  metadata["name"] = "bitmap";
 }
 
 

@@ -3,6 +3,14 @@
 
 namespace hashmap {
 
+void Monitoring::PrintInfo(FILE* fd, std::string metric) {
+  std::map<std::string, std::string> metadata;
+  hm_->GetMetadata(metadata);
+  fprintf(fd, " \"algorithm\": \"%s\",\n", metadata["name"].c_str());
+  fprintf(fd, " \"num_buckets\": %llu,\n", num_buckets_);
+  fprintf(fd, " \"metric\": \"%s\",\n", metric.c_str());
+}
+
 uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
                                             int32_t  increment) {
   std::map<uint64_t, uint64_t>::iterator it;
@@ -102,7 +110,7 @@ void Monitoring::PrintClustering(HashMap *hm) {
 
 
 
-void Monitoring::PrintDensity() {
+void Monitoring::PrintDensity(std::string filepath) {
   printf("Density (number of items colliding inside each bucket):\n");
   const std::map<uint64_t, uint64_t>& density = GetDensity();
   std::map<uint64_t, uint64_t>::const_iterator it;
@@ -110,9 +118,30 @@ void Monitoring::PrintDensity() {
   for (it = density.begin(); it != density.end(); ++it) {
     count_total += it->second;
   }
-  fprintf(stdout, "%5d - %5llu\n", 0, num_buckets_ - count_total);
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "density");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    [\n");
+
+  fprintf(fd, "     {\"0\": %llu}", num_buckets_ - count_total);
   for (it = density.begin(); it != density.end(); ++it) {
-    fprintf(stdout, "%5llu - %5llu\n", it->first, it->second);
+    fprintf(fd, ",\n");
+    fprintf(fd, "     {\"%llu\": %llu}", it->first, it->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    ]\n");
+  fprintf(fd, "}\n");
+
+  if (fd != stdout) {
+    fclose(fd); 
   }
 }
 
@@ -180,19 +209,49 @@ void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >
 }
 
 
-void Monitoring::PrintNumScannedBlocks(HashMap *hm) {
+void Monitoring::PrintNumScannedBlocks(std::string filepath) {
   // TODO: fix bug that can be reached with:
   // ./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64
-  fprintf(stdout, "PrintNumScannedBlocks\n");
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "num_scanned_blocks");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    [");
+
   std::vector< std::map<uint64_t, uint64_t> > num_scanned_blocks(6);
-  GetNumScannedBlocks(num_scanned_blocks, hm);
+  GetNumScannedBlocks(num_scanned_blocks, hm_);
   int size_blocks[6] = { 1, 8, 16, 32, 64, 128 };
   for (int i = 0; i < 6; i++) {
-    fprintf(stdout, "Block size %d\n", size_blocks[i]);
+    if (i > 0) fprintf(fd, ",");
+    fprintf(fd, "\n");
+    fprintf(fd, "     {\"block_size\": %d,\n", size_blocks[i]);
+    fprintf(fd, "      \"datapoints\": \n");
+    fprintf(fd, "         [");
     std::map<uint64_t, uint64_t>::iterator it;
+    bool first_item = true;
     for (it = num_scanned_blocks[i].begin(); it != num_scanned_blocks[i].end(); ++it) {
-      fprintf(stdout, "%6llu %6llu\n", it->first, it->second);
+      if (!first_item) fprintf(fd, ",");
+      first_item = false;
+      fprintf(fd, "\n");
+      fprintf(fd, "          {\"%llu\": %llu}", it->first, it->second);
     }
+    fprintf(fd, "\n");
+    fprintf(fd, "         ]\n");
+    fprintf(fd, "     }");
+  }
+
+  fprintf(fd, "\n");
+  fprintf(fd, "    ]\n");
+  fprintf(fd, "}\n");
+
+  if (fd != stdout) {
+    fclose(fd); 
   }
 }
 

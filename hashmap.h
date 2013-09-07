@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 
 #include "murmurhash3.h"
 #include "hamming.h"
@@ -33,7 +34,8 @@ public:
   virtual int CheckDensity() = 0;
   virtual int BucketCounts() = 0;
   virtual int GetBucketState(int index) = 0;
-  virtual int FillInitIndex(uint64_t index_stored, uint64_t *index_init) { return 0; }
+  virtual int FillInitIndex(uint64_t index_stored, uint64_t *index_init) = 0;
+  virtual void GetMetadata(std::map< std::string, std::string >& metadata) = 0;
 
   Monitoring *monitoring_;
 };
