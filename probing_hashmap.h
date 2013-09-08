@@ -36,9 +36,11 @@ public:
   }
 
   virtual ~ProbingHashMap() {
+    Close();
   }
 
   int Open();
+  int Close();
 
   struct Entry
   {

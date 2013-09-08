@@ -99,11 +99,13 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
   }
 
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 10; i++) {
     num_items = num_items_big;
     srand(i);
     keys.clear();
+    hm->Open();
     for (int cycle = 0; cycle < 20; cycle++) {
+      fprintf(stderr, "instance %d cycle %d\n", i, cycle);
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
@@ -121,7 +123,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         }
         keys.insert(key);
         int ret_put = hm->Put(key, key);
-        fprintf(stderr, "Put() [%s]\n", key.c_str());
+        //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
         }
@@ -151,13 +153,17 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         //fprintf(stdout, "str: %s\n", (*it).c_str());
         //key = buffer;
         int ret_remove = hm->Remove(*it);
-        fprintf(stderr, "Remove() [%s]\n", it->c_str());
+        //fprintf(stderr, "Remove() [%s]\n", it->c_str());
         if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
         keys.erase(it);
       }
       printf("keys erase %zu\n", keys.size());
       num_items = num_items_small;
     }
+
+    fprintf(stderr, "close\n");
+    hm->Close();
+    fprintf(stderr, "ok\n");
   }
 
   // testcase-algo-metric-runnumber-step.json
@@ -220,13 +226,14 @@ int main(int argc, char **argv) {
     exit(-1); 
   }
 
-  hm->Open();
-  std::string value_out("value_out");
-
   if (testcase) {
     run_testcase(hm, num_items, 0.75);
     return 0;
   }
+
+  hm->Open();
+  std::string value_out("value_out");
+
 
 
   int num_items_reached = 0;

@@ -34,9 +34,11 @@ public:
   }
 
   virtual ~BitmapHashMap() {
+    Close();
   }
 
   int Open();
+  int Close();
 
   struct Entry
   {

@@ -11,6 +11,24 @@ int ProbingHashMap::Open() {
   return 0;
 }
 
+int ProbingHashMap::Close() {
+  if (buckets_ != NULL) {
+    for (uint32_t i = 0; i < num_buckets_; i++) {
+      if (buckets_[i].entry != NULL && buckets_[i].entry != DELETED_BUCKET) {
+        delete[] buckets_[i].entry->data;
+        delete buckets_[i].entry;
+      }
+    }
+    delete[] buckets_;
+  }
+
+  if (monitoring_ != NULL) {
+    delete monitoring_;
+  }
+  return 0;
+}
+
+
 
 int ProbingHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);

@@ -26,6 +26,7 @@ public:
   }
 
   virtual int Open() = 0;
+  virtual int Close() = 0;
   virtual int Get(const std::string& key, std::string* value) = 0;
   virtual int Put(const std::string& key, const std::string& value) = 0;
   virtual int Exists(const std::string& key) = 0;

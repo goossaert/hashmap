@@ -38,9 +38,12 @@ public:
   }
 
   virtual ~ShadowHashMap() {
+    Close();
   }
 
   int Open();
+  int Close();
+
 
   struct Entry
   {

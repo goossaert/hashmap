@@ -11,6 +11,27 @@ int ShadowHashMap::Open() {
 }
 
 
+
+int ShadowHashMap::Close() {
+  if (buckets_ != NULL) {
+    for (uint32_t i = 0; i < num_buckets_; i++) {
+      if (buckets_[i].entry != NULL) {
+        delete[] buckets_[i].entry->data;
+        delete buckets_[i].entry;
+      }
+    }
+    delete[] buckets_;
+  }
+
+  if (monitoring_ != NULL) {
+    delete monitoring_;
+  }
+  return 0;
+}
+
+
+
+
 int ShadowHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
