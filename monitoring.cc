@@ -21,7 +21,7 @@ uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
     if(increment > 0) {
       num_items_in_bucket_[index] = 0;
     } else {
-      fprintf(stdout, "UpdateNumItemsInBucket %d %d -- return 0\n", index, increment);
+      //fprintf(stderr, "UpdateNumItemsInBucket %llu %d -- return 0\n", index, increment);
       return 0; 
     }
   }
@@ -46,7 +46,7 @@ uint64_t Monitoring::GetNumItemsInBucket(uint64_t index) {
 
 
 const std::map<uint64_t, uint64_t>& Monitoring::GetDensity() {
-  fprintf(stdout, "GetDensity() %d\n", num_items_in_bucket_.size());
+  fprintf(stdout, "GetDensity() %zu\n", num_items_in_bucket_.size());
   density_.clear();
   std::map<uint64_t, uint64_t>::iterator it;
   std::map<uint64_t, uint64_t>::iterator it_count;
@@ -167,7 +167,7 @@ uint64_t Monitoring::GetProbingSequenceLengthSearch(uint64_t index) {
 
 void Monitoring::SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl) {
   psl_search_[index] = psl;
-  fprintf(stderr, "SetPSL [%llu]\n", index);
+  //fprintf(stderr, "SetPSL [%llu]\n", index);
 }
 
 void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
@@ -176,7 +176,7 @@ void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
   if (it != psl_search_.end()) {
     psl_search_.erase(it);
   } else {
-    fprintf(stderr, "RemovePSL error: cannot find index [%llu]\n", index); 
+    //fprintf(stderr, "RemovePSL error: cannot find index [%llu]\n", index); 
   }
 
 }
@@ -189,7 +189,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
 
-  fprintf(stdout, "psl search %d\n", psl_search_.size());
+  //fprintf(stdout, "psl search %d\n", psl_search_.size());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);

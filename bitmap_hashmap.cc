@@ -128,7 +128,7 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
   }
   buckets_[index_init].bitmap |= mask; 
 
-  fprintf(stderr, "Put() [%s] %llu %llu\n", key.c_str(), index_init, index_empty);
+  //fprintf(stderr, "Put() [%s] %llu %llu\n", key.c_str(), index_init, index_empty);
 
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
@@ -161,7 +161,7 @@ int BitmapHashMap::Remove(const std::string& key) {
   }
 
   if (found) {
-    fprintf(stderr, "Remove() [%s] %llu %llu\n", key.c_str(), index_init, index_current);
+    //fprintf(stderr, "Remove() [%s] %llu %llu\n", key.c_str(), index_init, index_current);
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;

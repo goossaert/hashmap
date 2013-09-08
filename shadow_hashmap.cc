@@ -83,7 +83,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
       } else {
         // For debugging only, dump of the area around the neighborhood
         if (false) {
-          fprintf(stderr, "index [%llu] empty [%llu]\n", index_init, index_empty);
+          //fprintf(stderr, "index [%llu] empty [%llu]\n", index_init, index_empty);
           uint32_t index_temp = index_empty - size_neighborhood_ + 1;
           if (index_temp > index_init) index_temp = index_init;
           index_temp -= 20;

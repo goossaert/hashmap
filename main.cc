@@ -86,7 +86,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
   uint32_t num_items;
   uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
   uint32_t num_items_small = (uint32_t)((double)num_buckets * 0.1);
-  fprintf(stdout, "num_items %llu %llu\n", num_items, num_items_small);
+  fprintf(stdout, "num_items %u %u\n", num_items, num_items_small);
 
   std::string testcase = "batch";
   if (exists_or_mkdir(testcase.c_str()) != 0) {
@@ -122,7 +122,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
           fprintf(stderr, "Put() error\n");
         }
       }
-      printf("keys insert %d\n", keys.size());
+      printf("keys insert %zu\n", keys.size());
 
       hm->monitoring_->SetInstance(i);
       hm->monitoring_->SetCycle(cycle);
@@ -138,7 +138,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
       sprintf(filename, "%s/%s-%s-probing_sequence_length_search-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
       
-      for (int index_del = 0; index_del < num_items_small; index_del++) {
+      for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
         uint64_t offset = r % keys.size();
         //printf("delete index %d -- offset %llu -- rand %llu\n", index_del, offset, r);
@@ -151,7 +151,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
         keys.erase(it);
       }
-      printf("keys erase %d\n", keys.size());
+      printf("keys erase %zu\n", keys.size());
       num_items = num_items_small;
     }
   }
@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
   uint32_t size_probing = 4096;
   uint32_t num_buckets = 10000;
   std::string algorithm = "";
+  bool testcase = false;
 
   if (argc > 2) {
     for (int i = 1; i < argc; i += 2 ) {
@@ -195,6 +196,8 @@ int main(int argc, char **argv) {
         size_neighborhood_end = atoi(argv[i+1]);
       } else if (strcmp(argv[i], "--size_probing" ) == 0) {
         size_probing = atoi(argv[i+1]);
+      } else if (strcmp(argv[i], "--testcase" ) == 0) {
+        testcase = true;
       }
     }
   }
@@ -216,8 +219,10 @@ int main(int argc, char **argv) {
   hm->Open();
   std::string value_out("value_out");
 
-  run_testcase(hm, num_items, 0.75);
-  return 0;
+  if (testcase) {
+    run_testcase(hm, num_items, 0.75);
+    return 0;
+  }
 
 
   int num_items_reached = 0;
@@ -256,6 +261,7 @@ int main(int argc, char **argv) {
   }
 
 
+  /*
   if (hm->monitoring_ != NULL) {
       std::cout << "Monitoring: OK" << std::endl; 
   }
@@ -264,14 +270,13 @@ int main(int argc, char **argv) {
   // batch50-shadow-density-00001-0001.json
 
   hm->monitoring_->PrintDensity("density.json");
-  /*
   std::cout << "Clustering" << std::endl; 
   hm->monitoring_->PrintClustering(hm);
-  */
 
   hm->monitoring_->PrintProbingSequenceLengthSearch("probing_sequence_length_search.json");
   hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 
+  */
   //hm->CheckDensity();
   //hm->BucketCounts();
   
