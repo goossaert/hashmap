@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <set>
 #include <algorithm>
+#include <sys/stat.h>
 
 #include "hashmap.h"
 #include "bitmap_hashmap.h"
@@ -26,6 +27,21 @@ uint32_t NearestPowerOfTwo(const uint32_t number)	{
     power <<= 1;
   }
   return power;
+}
+
+
+int exists_or_mkdir(const char *path) {
+  struct stat sb;
+
+  if (stat(path, &sb) == 0) {
+    if (!S_ISDIR(sb.st_mode)) {
+      return 1;
+    }
+  } else if (mkdir(path, 0777) != 0) {
+    return 1;
+  }
+
+  return 0;
 }
 
 
@@ -66,21 +82,29 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
   char buffer[key_size + 1];
   buffer[key_size] = '\0';
   char filename[256];
+  char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uint32_t num_items;
   uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
   uint32_t num_items_small = (uint32_t)((double)num_buckets * 0.1);
   fprintf(stdout, "num_items %llu %llu\n", num_items, num_items_small);
+
+  std::string testcase = "batch";
+  if (exists_or_mkdir(testcase.c_str()) != 0) {
+    fprintf(stderr, "Could not create directory [%s]\n", testcase.c_str());
+    exit(1);
+  }
+
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 1; i++) {
     num_items = num_items_big;
     srand(i);
     keys.clear();
-    for (int cycle = 0; cycle < 10; cycle++) {
+    for (int cycle = 0; cycle < 100; cycle++) {
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
           for (int k = 0; k < key_size; k++) {
-            buffer[k] = rand() % 256;
+            buffer[k] = alpha[rand() % 62];
           }
           key = buffer;
           it_find = keys.find(key);
@@ -88,21 +112,31 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
             is_valid = true;
           } else {
             //fprintf(stdout, "%s\n", key.c_str());
-            fprintf(stdout, "%d\n", keys.size());
+            //fprintf(stdout, "%d\n", keys.size());
           }
         }
         keys.insert(key);
-        hm->Put(key, key);
+        int ret_put = hm->Put(key, key);
+        //fprintf(stderr, "Put() [%s]\n", key.c_str());
+        if (ret_put != 0) {
+          fprintf(stderr, "Put() error\n");
+        }
       }
       printf("keys insert %d\n", keys.size());
 
+      hm->monitoring_->SetInstance(i);
+      hm->monitoring_->SetCycle(cycle);
+
       std::map<std::string, std::string> metadata;
       hm->GetMetadata(metadata);
-      sprintf(filename, "batch-%s-density-%05d-%04d.json", metadata["name"].c_str(), i, cycle);
+      sprintf(filename, "%s/%s-%s-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       hm->monitoring_->PrintDensity(filename);
 
-      sprintf(filename, "batch-%s-num_scanned_blocks-%05d-%04d.json", metadata["name"].c_str(), i, cycle);
-      hm->monitoring_->PrintNumScannedBlocks(filename);
+      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      //hm->monitoring_->PrintNumScannedBlocks(filename);
+
+      sprintf(filename, "%s/%s-%s-probing_sequence_length_search-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
       
       for (int index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
@@ -112,6 +146,9 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         std::advance(it, offset);
         //fprintf(stdout, "str: %s\n", (*it).c_str());
         //key = buffer;
+        int ret_remove = hm->Remove(*it);
+        //fprintf(stderr, "Remove() [%s]\n", it->c_str());
+        if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
         keys.erase(it);
       }
       printf("keys erase %d\n", keys.size());
@@ -179,7 +216,7 @@ int main(int argc, char **argv) {
   hm->Open();
   std::string value_out("value_out");
 
-  run_testcase(hm, 10000, 0.8);
+  run_testcase(hm, num_items, 0.8);
   return 0;
 
 
@@ -230,9 +267,9 @@ int main(int argc, char **argv) {
   /*
   std::cout << "Clustering" << std::endl; 
   hm->monitoring_->PrintClustering(hm);
-
-  hm->monitoring_->PrintProbingSequenceLengthSearch();
   */
+
+  hm->monitoring_->PrintProbingSequenceLengthSearch("probing_sequence_length_search.json");
   hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 
   //hm->CheckDensity();

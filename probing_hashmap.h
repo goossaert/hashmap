@@ -31,6 +31,7 @@ public:
     buckets_ = NULL;
     num_buckets_ = size;
     HASH_DELETED_BUCKET = 1;
+    DELETED_BUCKET = (Entry*)1;
     probing_max_ = probing_max;
   }
 
@@ -82,6 +83,7 @@ private:
 
   uint32_t probing_max_;
   uint64_t HASH_DELETED_BUCKET;
+  Entry* DELETED_BUCKET;
 
 };
 

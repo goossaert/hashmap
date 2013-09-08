@@ -18,7 +18,7 @@ int ProbingHashMap::Get(const std::string& key, std::string* value) {
   bool found = false;
   for (uint32_t i = 0; i < probing_max_; i++) {
     uint64_t index_current = (index_init + i) % num_buckets_;
-    if (buckets_[index_current].hash == HASH_DELETED_BUCKET) {
+    if (buckets_[index_current].entry == DELETED_BUCKET) {
       continue;
     }
     if (   buckets_[index_current].entry != NULL
@@ -46,9 +46,9 @@ uint64_t ProbingHashMap::FindEmptyBucket(uint64_t index_init) {
   for (uint32_t i = 0; i < probing_max_; i++) {
     index_current = index_init + i;
     if (   buckets_[index_current % num_buckets_].entry == NULL
-        || buckets_[index_current % num_buckets_].hash  == HASH_DELETED_BUCKET) {
+        || buckets_[index_current % num_buckets_].entry == DELETED_BUCKET) {
       found = true;
-      monitoring_->SetProbingSequenceLengthSearch(index_current, i);
+      monitoring_->SetProbingSequenceLengthSearch(index_current % num_buckets_, i);
       break;
     }
   }
@@ -104,7 +104,7 @@ int ProbingHashMap::Remove(const std::string& key) {
 
   for (uint32_t i = 0; i < probing_max_; i++) {
     index_current = (index_init + i) % num_buckets_;
-    if (buckets_[index_current].hash == HASH_DELETED_BUCKET) {
+    if (buckets_[index_current].entry == DELETED_BUCKET) {
       continue;
     } else if (buckets_[index_current].entry == NULL) {
       break;
@@ -118,9 +118,13 @@ int ProbingHashMap::Remove(const std::string& key) {
   if (found) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
-    buckets_[index_current].hash  = HASH_DELETED_BUCKET;
-    buckets_[index_current].entry = NULL;
+    buckets_[index_current].entry = DELETED_BUCKET;
+    monitoring_->UpdateNumItemsInBucket(index_init, -1);
+    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    //fprintf(stderr, "Remove() OK\n");
     return 0;
+  } else {
+    //fprintf(stderr, "Remove() not found - %llu %p\n", buckets_[index_current].hash, buckets_[index_current].entry);
   }
 
   return 1;

@@ -9,6 +9,8 @@ void Monitoring::PrintInfo(FILE* fd, std::string metric) {
   fprintf(fd, " \"algorithm\": \"%s\",\n", metadata["name"].c_str());
   fprintf(fd, " \"num_buckets\": %llu,\n", num_buckets_);
   fprintf(fd, " \"metric\": \"%s\",\n", metric.c_str());
+  fprintf(fd, " \"instance\": %llu,\n", instance_);
+  fprintf(fd, " \"cycle\": %llu,\n", cycle_);
 }
 
 uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
@@ -19,9 +21,12 @@ uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
     if(increment > 0) {
       num_items_in_bucket_[index] = 0;
     } else {
+      //fprintf(stdout, "UpdateNumItemsInBucket %d %d -- return 0\n", index, increment);
       return 0; 
     }
   }
+
+  //fprintf(stdout, "UpdateNumItemsInBucket %d %d\n", index, increment);
 
   uint64_t num_items_new = num_items_in_bucket_[index] + increment;
   if (num_items_new < 0) {
@@ -41,6 +46,7 @@ uint64_t Monitoring::GetNumItemsInBucket(uint64_t index) {
 
 
 const std::map<uint64_t, uint64_t>& Monitoring::GetDensity() {
+  //fprintf(stdout, "GetDensity() %d\n", num_items_in_bucket_.size());
   density_.clear();
   std::map<uint64_t, uint64_t>::iterator it;
   std::map<uint64_t, uint64_t>::iterator it_count;
@@ -129,15 +135,15 @@ void Monitoring::PrintDensity(std::string filepath) {
   fprintf(fd, "{\n");
   PrintInfo(fd, "density");
   fprintf(fd, " \"datapoints\":\n");
-  fprintf(fd, "    [\n");
+  fprintf(fd, "    {\n");
 
-  fprintf(fd, "     {\"0\": %llu}", num_buckets_ - count_total);
+  fprintf(fd, "      \"0\": %llu", num_buckets_ - count_total);
   for (it = density.begin(); it != density.end(); ++it) {
     fprintf(fd, ",\n");
-    fprintf(fd, "     {\"%llu\": %llu}", it->first, it->second);
+    fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
   }
   fprintf(fd, "\n");
-  fprintf(fd, "    ]\n");
+  fprintf(fd, "    }\n");
   fprintf(fd, "}\n");
 
   if (fd != stdout) {
@@ -160,10 +166,26 @@ void Monitoring::SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl) {
   psl_search_[index] = psl;
 }
 
+void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
+  std::map<uint64_t, uint64_t>::iterator it;
+  it = psl_search_.find(index);
+  if (it != psl_search_.end()) {
+    psl_search_.erase(it);
+  } else {
+    fprintf(stderr, "RemovePSL error: cannot find index\n"); 
+  }
 
-void Monitoring::PrintProbingSequenceLengthSearch() {
+}
+
+
+
+
+
+void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
+
+  fprintf(stdout, "psl search %d\n", psl_search_.size());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);
@@ -172,11 +194,28 @@ void Monitoring::PrintProbingSequenceLengthSearch() {
     }
     counts[it_psl->second] += 1;
   }
- 
-  fprintf(stdout, "Probing sequence length for search (PSL-S)\n");
-  for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
-    fprintf(stdout, "%5llu - %5llu\n", it_count->first, it_count->second);
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
   }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "probing_sequence_length_search");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {\n");
+
+  bool first_item = true;
+  for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
+    if (!first_item) fprintf(fd, ",\n");
+    first_item = false;
+    fprintf(fd, "     \"%llu\": %llu", it_count->first, it_count->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
 }
 
 

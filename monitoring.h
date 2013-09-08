@@ -46,11 +46,14 @@ public:
   const std::map<uint64_t, uint64_t>& GetClustering();
   uint64_t GetProbingSequenceLengthSearch(uint64_t index);
   void SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl);
-  void PrintProbingSequenceLengthSearch();
+  void RemoveProbingSequenceLengthSearch(uint64_t index);
+  void PrintProbingSequenceLengthSearch(std::string filepath);
 
   void GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
   void PrintInfo(FILE* fd, std::string metric);
+  void SetCycle(uint64_t cycle) { cycle_ = cycle; }
+  void SetInstance(uint64_t instance) { instance_ = instance; }
 
 
 private:
@@ -61,6 +64,8 @@ private:
   std::map<uint64_t, uint64_t> density_;
   std::map<uint64_t, uint64_t> psl_search_;
   HashMap *hm_;
+  uint64_t cycle_;
+  uint64_t instance_;
 
 
 
