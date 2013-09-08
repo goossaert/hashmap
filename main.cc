@@ -51,19 +51,23 @@ void show_usage() {
 
   fprintf(stdout, "General parameters (mandatory):\n");
   fprintf(stdout, " --algo            algorithm to use for the hash table. Possible values are:\n");
+  fprintf(stdout, "                     * linear: linear probing\n");
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
-  fprintf(stdout, "                     * probing: hopscotch hashing with shadow representation\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "Parameters for probing algorithm (optional):\n");
+  fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for bitmap algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
-  fprintf(stdout, " --size_probing    maximum number of buckets used in the linear probing (default=4096)\n");
+  fprintf(stdout, " --size_probing    maximum number of buckets used in the probing (default=4096)\n");
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for shadow algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
-  fprintf(stdout, " --size_probing    maximum number of buckets used in the linear probing (default=4096)\n");
+  fprintf(stdout, " --size_probing    maximum number of buckets used in the probing (default=4096)\n");
   fprintf(stdout, " --size_nh_start   starting size of the neighborhoods (default=32)\n");
   fprintf(stdout, " --size_nh_end     ending size of the neighborhoods (default=32)\n");
   fprintf(stdout, "\n");
@@ -209,7 +213,7 @@ int main(int argc, char **argv) {
     hm = new hashmap::BitmapHashMap(num_items, size_probing);
   } else if (algorithm == "shadow") {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
-  } else if (algorithm == "probing") {
+  } else if (algorithm == "linear") {
     hm = new hashmap::ProbingHashMap(num_items, 5000);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
