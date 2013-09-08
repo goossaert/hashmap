@@ -99,7 +99,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
     num_items = num_items_big;
     srand(i);
     keys.clear();
-    for (int cycle = 0; cycle < 100; cycle++) {
+    for (int cycle = 0; cycle < 20; cycle++) {
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
@@ -117,7 +117,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         }
         keys.insert(key);
         int ret_put = hm->Put(key, key);
-        //fprintf(stderr, "Put() [%s]\n", key.c_str());
+        fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
         }
@@ -147,7 +147,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
         //fprintf(stdout, "str: %s\n", (*it).c_str());
         //key = buffer;
         int ret_remove = hm->Remove(*it);
-        //fprintf(stderr, "Remove() [%s]\n", it->c_str());
+        fprintf(stderr, "Remove() [%s]\n", it->c_str());
         if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
         keys.erase(it);
       }
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
   } else if (algorithm == "shadow") {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else if (algorithm == "probing") {
-    hm = new hashmap::ProbingHashMap(num_items, 500);
+    hm = new hashmap::ProbingHashMap(num_items, 5000);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
     exit(-1); 
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
   hm->Open();
   std::string value_out("value_out");
 
-  run_testcase(hm, num_items, 0.8);
+  run_testcase(hm, num_items, 0.75);
   return 0;
 
 

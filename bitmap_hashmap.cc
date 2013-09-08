@@ -70,6 +70,13 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
           buckets_[index_base].bitmap &= ~mask;
           uint32_t mask_new = 1 << i;
           buckets_[index_base].bitmap |= mask_new;
+
+          // Move PSL monitoring
+          uint64_t psl = monitoring_->GetProbingSequenceLengthSearch(index_candidate);
+          monitoring_->RemoveProbingSequenceLengthSearch(index_candidate);
+          monitoring_->SetProbingSequenceLengthSearch(index_empty, psl);
+
+          // Prepare for next iteration
           index_empty = index_candidate;
           found_swap = true;
           break;
@@ -121,6 +128,8 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
   }
   buckets_[index_init].bitmap |= mask; 
 
+  fprintf(stderr, "Put() [%s] %llu %llu\n", key.c_str(), index_init, index_empty);
+
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;
@@ -152,10 +161,13 @@ int BitmapHashMap::Remove(const std::string& key) {
   }
 
   if (found) {
+    fprintf(stderr, "Remove() [%s] %llu %llu\n", key.c_str(), index_init, index_current);
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
     buckets_[index_init].bitmap = buckets_[index_init].bitmap & (~mask);
+    monitoring_->UpdateNumItemsInBucket(index_init, -1);
+    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     return 0;
   }
 

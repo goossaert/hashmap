@@ -66,6 +66,10 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
         buckets_[index_candidate % num_buckets_].entry = NULL;
         buckets_[index_candidate % num_buckets_].hash = 0;
 
+        uint64_t psl = monitoring_->GetProbingSequenceLengthSearch(index_candidate % num_buckets_);
+        monitoring_->RemoveProbingSequenceLengthSearch(index_candidate % num_buckets_);
+        monitoring_->SetProbingSequenceLengthSearch(index_empty % num_buckets_, psl);
+
         index_empty = index_candidate;
         found_swap = true;
         break;
@@ -167,6 +171,8 @@ int ShadowHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
+    monitoring_->UpdateNumItemsInBucket(index_init, -1);
+    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     return 0;
   }
 

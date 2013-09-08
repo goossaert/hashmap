@@ -21,7 +21,7 @@ uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
     if(increment > 0) {
       num_items_in_bucket_[index] = 0;
     } else {
-      //fprintf(stdout, "UpdateNumItemsInBucket %d %d -- return 0\n", index, increment);
+      fprintf(stdout, "UpdateNumItemsInBucket %d %d -- return 0\n", index, increment);
       return 0; 
     }
   }
@@ -29,7 +29,7 @@ uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
   //fprintf(stdout, "UpdateNumItemsInBucket %d %d\n", index, increment);
 
   uint64_t num_items_new = num_items_in_bucket_[index] + increment;
-  if (num_items_new < 0) {
+  if (num_items_new <= 0) {
     num_items_in_bucket_.erase(it);
     return 0;
   } else {
@@ -46,7 +46,7 @@ uint64_t Monitoring::GetNumItemsInBucket(uint64_t index) {
 
 
 const std::map<uint64_t, uint64_t>& Monitoring::GetDensity() {
-  //fprintf(stdout, "GetDensity() %d\n", num_items_in_bucket_.size());
+  fprintf(stdout, "GetDensity() %d\n", num_items_in_bucket_.size());
   density_.clear();
   std::map<uint64_t, uint64_t>::iterator it;
   std::map<uint64_t, uint64_t>::iterator it_count;
@@ -135,11 +135,14 @@ void Monitoring::PrintDensity(std::string filepath) {
   fprintf(fd, "{\n");
   PrintInfo(fd, "density");
   fprintf(fd, " \"datapoints\":\n");
-  fprintf(fd, "    {\n");
+  fprintf(fd, "    {");
 
-  fprintf(fd, "      \"0\": %llu", num_buckets_ - count_total);
+  //fprintf(fd, "      \"0\": %llu", num_buckets_ - count_total);
+  bool first_item = true;
   for (it = density.begin(); it != density.end(); ++it) {
-    fprintf(fd, ",\n");
+    if (!first_item) fprintf(fd, ",");
+    first_item = false;
+    fprintf(fd, "\n");
     fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
   }
   fprintf(fd, "\n");
@@ -164,6 +167,7 @@ uint64_t Monitoring::GetProbingSequenceLengthSearch(uint64_t index) {
 
 void Monitoring::SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl) {
   psl_search_[index] = psl;
+  fprintf(stderr, "SetPSL [%llu]\n", index);
 }
 
 void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
@@ -172,7 +176,7 @@ void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
   if (it != psl_search_.end()) {
     psl_search_.erase(it);
   } else {
-    fprintf(stderr, "RemovePSL error: cannot find index\n"); 
+    fprintf(stderr, "RemovePSL error: cannot find index [%llu]\n", index); 
   }
 
 }
