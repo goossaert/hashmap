@@ -2,6 +2,8 @@
 #include <string>
 #include <sstream>
 #include <stdlib.h>
+#include <set>
+#include <algorithm>
 
 #include "hashmap.h"
 #include "bitmap_hashmap.h"
@@ -56,6 +58,75 @@ void show_usage() {
 }
 
 
+
+void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor) {
+  std::set<std::string> keys;
+  std::string key;
+  int key_size = 16;
+  char buffer[key_size + 1];
+  buffer[key_size] = '\0';
+  char filename[256];
+  uint32_t num_items;
+  uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
+  uint32_t num_items_small = (uint32_t)((double)num_buckets * 0.1);
+  fprintf(stdout, "num_items %llu %llu\n", num_items, num_items_small);
+  std::set<std::string>::iterator it_find;
+  for (int i = 0; i < 5; i++) {
+    num_items = num_items_big;
+    srand(i);
+    keys.clear();
+    for (int cycle = 0; cycle < 10; cycle++) {
+      for (uint32_t j = 0; j < num_items; j++) {
+        bool is_valid = false;
+        while (!is_valid) {
+          for (int k = 0; k < key_size; k++) {
+            buffer[k] = rand() % 256;
+          }
+          key = buffer;
+          it_find = keys.find(key);
+          if (it_find == keys.end()) {
+            is_valid = true;
+          } else {
+            //fprintf(stdout, "%s\n", key.c_str());
+            fprintf(stdout, "%d\n", keys.size());
+          }
+        }
+        keys.insert(key);
+        hm->Put(key, key);
+      }
+      printf("keys insert %d\n", keys.size());
+
+      std::map<std::string, std::string> metadata;
+      hm->GetMetadata(metadata);
+      sprintf(filename, "batch-%s-density-%05d-%04d.json", metadata["name"].c_str(), i, cycle);
+      hm->monitoring_->PrintDensity(filename);
+
+      sprintf(filename, "batch-%s-num_scanned_blocks-%05d-%04d.json", metadata["name"].c_str(), i, cycle);
+      hm->monitoring_->PrintNumScannedBlocks(filename);
+      
+      for (int index_del = 0; index_del < num_items_small; index_del++) {
+        uint64_t r = rand();
+        uint64_t offset = r % keys.size();
+        //printf("delete index %d -- offset %llu -- rand %llu\n", index_del, offset, r);
+        std::set<std::string>::iterator it(keys.begin());
+        std::advance(it, offset);
+        //fprintf(stdout, "str: %s\n", (*it).c_str());
+        //key = buffer;
+        keys.erase(it);
+      }
+      printf("keys erase %d\n", keys.size());
+      num_items = num_items_small;
+    }
+  }
+
+  // testcase-algo-metric-runnumber-step.json
+  // batch50-shadow-density-00001-0001.json
+  //hm->monitoring_->PrintDensity("density.json");
+  //hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
+}
+
+
+
 int main(int argc, char **argv) {
   bool has_error;
 
@@ -108,6 +179,10 @@ int main(int argc, char **argv) {
   hm->Open();
   std::string value_out("value_out");
 
+  run_testcase(hm, 10000, 0.8);
+  return 0;
+
+
   int num_items_reached = 0;
 
   for (int i = 0; i < num_items; i++) {
@@ -147,6 +222,9 @@ int main(int argc, char **argv) {
   if (hm->monitoring_ != NULL) {
       std::cout << "Monitoring: OK" << std::endl; 
   }
+
+  // testcase-algo-metric-runnumber-step.json
+  // batch50-shadow-density-00001-0001.json
 
   hm->monitoring_->PrintDensity("density.json");
   /*
