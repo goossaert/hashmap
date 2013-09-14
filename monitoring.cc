@@ -45,7 +45,7 @@ uint64_t Monitoring::GetNumItemsInBucket(uint64_t index) {
 }
 
 
-const std::map<uint64_t, uint64_t>& Monitoring::GetDensity() {
+void Monitoring::GetDensity() {
   fprintf(stdout, "GetDensity() %zu\n", num_items_in_bucket_.size());
   density_.clear();
   std::map<uint64_t, uint64_t>::iterator it;
@@ -57,7 +57,8 @@ const std::map<uint64_t, uint64_t>& Monitoring::GetDensity() {
     }
     density_[it->second] += 1;
   }
-  return density_;
+  fprintf(stdout, "GetDensity() out %zu\n", density_.size());
+  //return density_;
 }
 
 
@@ -118,28 +119,35 @@ void Monitoring::PrintClustering(HashMap *hm) {
 
 void Monitoring::PrintDensity(std::string filepath) {
   printf("Density (number of items colliding inside each bucket):\n");
-  const std::map<uint64_t, uint64_t>& density = GetDensity();
+  GetDensity();
   std::map<uint64_t, uint64_t>::const_iterator it;
   uint64_t count_total = 0;
-  for (it = density.begin(); it != density.end(); ++it) {
+  for (it = density_.begin(); it != density_.end(); ++it) {
     count_total += it->second;
   }
+  fprintf(stderr, "0\n");
 
   FILE* fd = NULL;
   if (filepath == "stdout") {
     fd = stdout;
   } else {
-    fd = fopen(filepath.c_str(), "w");
+    if ((fd = fopen(filepath.c_str(), "w")) == NULL) {
+      fprintf(stderr, "Could not open file [%s]: %s\n", filepath.c_str(), strerror(errno));
+    }
+    fprintf(stderr, "1\n");
   }
 
+
   fprintf(fd, "{\n");
+  fprintf(stderr, "2\n");
   PrintInfo(fd, "density");
+  fprintf(stderr, "3\n");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {");
 
   //fprintf(fd, "      \"0\": %llu", num_buckets_ - count_total);
   bool first_item = true;
-  for (it = density.begin(); it != density.end(); ++it) {
+  for (it = density_.begin(); it != density_.end(); ++it) {
     if (!first_item) fprintf(fd, ",");
     first_item = false;
     fprintf(fd, "\n");
@@ -149,7 +157,7 @@ void Monitoring::PrintDensity(std::string filepath) {
   fprintf(fd, "    }\n");
   fprintf(fd, "}\n");
 
-  if (fd != stdout) {
+  if (filepath != "stdout") {
     fclose(fd); 
   }
 }
@@ -189,7 +197,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
 
-  //fprintf(stdout, "psl search %d\n", psl_search_.size());
+  fprintf(stderr, "psl search %d\n", psl_search_.size());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);
@@ -220,6 +228,11 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
   fprintf(fd, "}\n");
+
+  if (filepath != "stdout") {
+    fclose(fd); 
+  }
+
 }
 
 
@@ -293,7 +306,7 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
   fprintf(fd, "    ]\n");
   fprintf(fd, "}\n");
 
-  if (fd != stdout) {
+  if (filepath != "stdout") {
     fclose(fd); 
   }
 }

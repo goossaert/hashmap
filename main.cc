@@ -85,7 +85,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
   int key_size = 16;
   char buffer[key_size + 1];
   buffer[key_size] = '\0';
-  char filename[256];
+  char filename[1024];
   char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uint32_t num_items;
   uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
@@ -104,7 +104,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
     srand(i);
     keys.clear();
     hm->Open();
-    for (int cycle = 0; cycle < 20; cycle++) {
+    for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
@@ -138,10 +138,12 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
       sprintf(filename, "%s/%s-%s-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       hm->monitoring_->PrintDensity(filename);
 
+      fprintf(stderr, "PrintDensity() out\n");
       //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       //hm->monitoring_->PrintNumScannedBlocks(filename);
 
-      sprintf(filename, "%s/%s-%s-probing_sequence_length_search-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      sprintf(filename, "%s/%s-%s-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      fprintf(stderr, "filename psl %s\n", filename);
       hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
       
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {

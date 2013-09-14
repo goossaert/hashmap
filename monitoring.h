@@ -7,6 +7,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include <string>
 #include <iostream>
@@ -37,7 +38,7 @@ public:
   uint64_t UpdateNumItemsInBucket(uint64_t index,
                                   int32_t increment);
   uint64_t GetNumItemsInBucket(uint64_t index);
-  const std::map<uint64_t, uint64_t>& GetDensity();
+  void GetDensity();
   void PrintDensity(std::string filepath);
 
   uint64_t** GetClustering(HashMap* hm);
