@@ -7,9 +7,10 @@
 #include <sys/stat.h>
 
 #include "hashmap.h"
+#include "probing_hashmap.h"
+#include "robinhood_hashmap.h"
 #include "bitmap_hashmap.h"
 #include "shadow_hashmap.h"
-#include "probing_hashmap.h"
 
 
 
@@ -52,13 +53,19 @@ void show_usage() {
   fprintf(stdout, "General parameters (mandatory):\n");
   fprintf(stdout, " --algo            algorithm to use for the hash table. Possible values are:\n");
   fprintf(stdout, "                     * linear: linear probing\n");
+  fprintf(stdout, "                     * robinhood: robin hood hashing\n");
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
   fprintf(stdout, "\n");
 
-  fprintf(stdout, "Parameters for probing algorithm (optional):\n");
+  fprintf(stdout, "Parameters for linear probing algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
   fprintf(stdout, "\n");
+
+  fprintf(stdout, "Parameters for Robin Hood algorithm (optional):\n");
+  fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
+  fprintf(stdout, "\n");
+
 
   fprintf(stdout, "Parameters for bitmap algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
@@ -132,17 +139,18 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
 
       hm->monitoring_->SetInstance(i);
       hm->monitoring_->SetCycle(cycle);
+      hm->monitoring_->SetLoadFactor(load_factor);
 
       std::map<std::string, std::string> metadata;
       hm->GetMetadata(metadata);
-      sprintf(filename, "%s/%s-%s-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      sprintf(filename, "%s/%s-%s-%llu-%.2f-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
       hm->monitoring_->PrintDensity(filename);
 
       fprintf(stderr, "PrintDensity() out\n");
       //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       //hm->monitoring_->PrintNumScannedBlocks(filename);
 
-      sprintf(filename, "%s/%s-%s-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      sprintf(filename, "%s/%s-%s-%llu-%.2f-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
       
@@ -193,6 +201,7 @@ int main(int argc, char **argv) {
   uint32_t size_neighborhood_end = 32;
   uint32_t size_probing = 4096;
   uint32_t num_buckets = 10000;
+  double load_factor = 0.8;
   std::string algorithm = "";
   bool testcase = false;
 
@@ -210,6 +219,8 @@ int main(int argc, char **argv) {
         size_probing = atoi(argv[i+1]);
       } else if (strcmp(argv[i], "--testcase" ) == 0) {
         testcase = true;
+      } else if (strcmp(argv[i], "--load_factor" ) == 0) { // only for the testcase
+        load_factor = atof(argv[i+1]);
       }
     }
   }
@@ -223,13 +234,15 @@ int main(int argc, char **argv) {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else if (algorithm == "linear") {
     hm = new hashmap::ProbingHashMap(num_items, 5000);
+  } else if (algorithm == "robinhood") {
+    hm = new hashmap::RobinHoodHashMap(num_items);
   } else {
     fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
     exit(-1); 
   }
 
   if (testcase) {
-    run_testcase(hm, num_items, 0.75);
+    run_testcase(hm, num_items, load_factor);
     return 0;
   }
 

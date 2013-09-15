@@ -38,10 +38,12 @@ int ProbingHashMap::Get(const std::string& key, std::string* value) {
     uint64_t index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == DELETED_BUCKET) {
       continue;
+    } else if (buckets_[index_current].entry == NULL) {
+      break;
     }
-    if (   buckets_[index_current].entry != NULL
-        && key.size() == buckets_[index_current].entry->size_key
-        && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
+
+    if(   key.size() == buckets_[index_current].entry->size_key
+       && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       *value = std::string(buckets_[index_current].entry->data + key.size(),
                            buckets_[index_current].entry->size_value);
       found = true;
@@ -100,6 +102,7 @@ int ProbingHashMap::Put(const std::string& key, const std::string& value) {
   entry->size_value = value.size();
   entry->data = data;
   buckets_[index_empty].entry = entry;
+  buckets_[index_empty].hash  = hash;
 
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 

@@ -38,39 +38,54 @@ def aggregate_datapoints(dirpath, testcase):
                 #print "average %f" % (avg)
                 ia = data['algorithm']
                 im = data['metric']
+                ib = data['num_buckets']
+                il = data['load_factor']
                 ii = data['instance']
                 ic = data['cycle']
-                if ia not in aggregate:
-                    aggregate[ia] = {}
-                if im not in aggregate[ia]:
-                    aggregate[ia][im] = {}
-                if ic not in aggregate[ia][im]:
-                    aggregate[ia][im][ic] = []
-                aggregate[ia][im][ic].append(average)
+                ia = '%s-%s-%s' % (ia, ib, il)
+                if im not in aggregate:
+                    aggregate[im] = {}
+                if ia not in aggregate[im]:
+                    aggregate[im][ia] = {}
+                if ic not in aggregate[im][ia]:
+                    aggregate[im][ia][ic] = []
+                aggregate[im][ia][ic].append(average)
 
     return aggregate 
 
 def plot_aggregates(aggregates):
     xs = []
     ys = []
-    for ia in aggregates.keys():
-        if ia != 'probing': continue
-        for im in aggregates[ia]:
-            if im != 'probing_sequence_length_search': continue
-            pprint.pprint(aggregates[ia][im])
-            for key, value in sorted(aggregates[ia][im].items()):
+    fig = plt.figure(3)
+    ax = fig.add_subplot(111)
+    lines = []
+    names = []
+    for im in aggregates.keys():
+        print 'im', im
+        if im != 'probing_sequence_length_search': continue
+        for ia in aggregates[im]:
+            print 'ia', ia
+            #if ia != 'probing': continue
+            xs = []
+            ys = []
+            for key, value in sorted(aggregates[im][ia].items()):
                 if not value:
                     value = [0]
                 xs.append(key)
                 ys.append(sum(value) / len(value))
-    fig = plt.figure(1)
-    ax = fig.add_subplot(111)
-    line_current = ax.plot(xs, ys, linewidth=1)
-    plt.show()
+            print 'plot %s | %s' % (ia, im)
+            line_current = ax.plot(xs, ys, linewidth=1)
+            lines.append(line_current)
+            names.append(ia)
 
     #plt.plot([1,2,3,4], [1,4,9,16], 'ro')
     #plt.axis([0, 6, 0, 20])
     #plt.show()
+
+    plt.legend(names, loc='upper left')
+    plt.show()
+
+    #pprint.pprint(aggregates)
 
 if __name__=="__main__":
     agg = aggregate_datapoints(sys.argv[1], sys.argv[2])

@@ -7,6 +7,7 @@ void Monitoring::PrintInfo(FILE* fd, std::string metric) {
   std::map<std::string, std::string> metadata;
   hm_->GetMetadata(metadata);
   fprintf(fd, " \"algorithm\": \"%s\",\n", metadata["name"].c_str());
+  fprintf(fd, " \"load_factor\": \"%.2f\",\n", load_factor_);
   fprintf(fd, " \"num_buckets\": %llu,\n", num_buckets_);
   fprintf(fd, " \"metric\": \"%s\",\n", metric.c_str());
   fprintf(fd, " \"instance\": %llu,\n", instance_);
@@ -197,7 +198,9 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
 
-  fprintf(stderr, "psl search %d\n", psl_search_.size());
+  uint64_t min_psl = hm_->GetMinPSL();
+
+  fprintf(stderr, "psl search size:%zu min_psl:%llu\n", psl_search_.size(), hm_->GetMinPSL());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);
@@ -223,7 +226,9 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
-    fprintf(fd, "     \"%llu\": %llu", it_count->first, it_count->second);
+    int64_t val1 = it_count->first;
+    int64_t val2 = min_psl;
+    fprintf(fd, "     \"%lld\": %llu", val1 - val2, it_count->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");

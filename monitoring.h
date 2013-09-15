@@ -56,6 +56,8 @@ public:
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
   void SetInstance(uint64_t instance) { instance_ = instance; }
 
+  void SetLoadFactor(double load_factor) { load_factor_ = load_factor; }
+
 
 private:
   std::map<uint64_t, uint64_t> num_items_in_bucket_;
@@ -67,6 +69,7 @@ private:
   HashMap *hm_;
   uint64_t cycle_;
   uint64_t instance_;
+  double load_factor_;
 
 
 
