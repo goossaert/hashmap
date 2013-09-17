@@ -308,9 +308,7 @@ int BitmapHashMap::GetBucketState(int index) {
 
 int BitmapHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
   if(buckets_[index_stored].entry == NULL) return -1;
-  std::string key(buckets_[index_stored].entry->data,
-                  buckets_[index_stored].entry->size_key);
-  *index_init = hash_function(key) % num_buckets_;
+  *index_init = buckets_[index_stored].hash % num_buckets_;
   return 0;
 }
 

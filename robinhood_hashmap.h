@@ -66,6 +66,7 @@ public:
   int FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance);
   void GetMetadata(std::map< std::string, std::string >& metadata);
   uint64_t GetMinPSL();
+  uint64_t GetMaxPSL();
 
 private:
   Bucket* buckets_;

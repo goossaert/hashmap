@@ -96,7 +96,7 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
   char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uint32_t num_items;
   uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
-  uint32_t num_items_small = (uint32_t)((double)num_buckets * 0.1);
+  uint32_t num_items_small = (uint32_t)((double)num_buckets * load_factor); // 0.1
   fprintf(stdout, "num_items %u %u\n", num_items, num_items_small);
 
   std::string testcase = "batch";
@@ -184,6 +184,108 @@ void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor
 
 
 
+
+void run_testcase2(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor) {
+  std::set<std::string> keys;
+  std::string key;
+  int key_size = 16;
+  char buffer[key_size + 1];
+  buffer[key_size] = '\0';
+  char filename[1024];
+  char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  uint32_t num_items;
+  uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
+  uint32_t num_items_small = (uint32_t)((double)num_buckets * load_factor); // 0.1
+  fprintf(stdout, "num_items %u %u\n", num_items, num_items_small);
+
+  std::string testcase = "batch";
+  if (exists_or_mkdir(testcase.c_str()) != 0) {
+    fprintf(stderr, "Could not create directory [%s]\n", testcase.c_str());
+    exit(1);
+  }
+
+  std::set<std::string>::iterator it_find;
+  for (int i = 0; i < 10; i++) {
+    num_items = num_items_big;
+    srand(i);
+    keys.clear();
+    hm->Open();
+    for (int cycle = 0; cycle < 50; cycle++) {
+      fprintf(stderr, "instance %d cycle %d\n", i, cycle);
+      for (uint32_t j = 0; j < num_items; j++) {
+        bool is_valid = false;
+        while (!is_valid) {
+          for (int k = 0; k < key_size; k++) {
+            buffer[k] = alpha[rand() % 62];
+          }
+          key = buffer;
+          it_find = keys.find(key);
+          if (it_find == keys.end()) {
+            is_valid = true;
+          } else {
+            //fprintf(stdout, "%s\n", key.c_str());
+            //fprintf(stdout, "%d\n", keys.size());
+          }
+        }
+        keys.insert(key);
+        int ret_put = hm->Put(key, key);
+        //fprintf(stderr, "Put() [%s]\n", key.c_str());
+        if (ret_put != 0) {
+          fprintf(stderr, "Put() error\n");
+        }
+
+        if (cycle > 0) {
+          uint64_t r = rand();
+          uint64_t offset = r % keys.size();
+          //printf("delete index %d -- offset %llu -- rand %llu\n", index_del, offset, r);
+          std::set<std::string>::iterator it(keys.begin());
+          std::advance(it, offset);
+          //fprintf(stdout, "str: %s\n", (*it).c_str());
+          //key = buffer;
+          int ret_remove = hm->Remove(*it);
+          //fprintf(stderr, "Remove() [%s]\n", it->c_str());
+          if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
+          keys.erase(it);
+        }
+      }
+      printf("keys insert %zu\n", keys.size());
+
+      hm->monitoring_->SetInstance(i);
+      hm->monitoring_->SetCycle(cycle);
+      hm->monitoring_->SetLoadFactor(load_factor);
+
+      std::map<std::string, std::string> metadata;
+      hm->GetMetadata(metadata);
+      sprintf(filename, "%s/%s-%s-%llu-%.2f-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
+      hm->monitoring_->PrintDensity(filename);
+
+      fprintf(stderr, "PrintDensity() out\n");
+      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
+      //hm->monitoring_->PrintNumScannedBlocks(filename);
+
+      sprintf(filename, "%s/%s-%s-%llu-%.2f-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
+      fprintf(stderr, "filename psl %s\n", filename);
+      hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
+
+      num_items = num_items_small;
+    }
+
+    fprintf(stderr, "close\n");
+    hm->Close();
+    fprintf(stderr, "ok\n");
+  }
+
+  // testcase-algo-metric-runnumber-step.json
+  // batch50-shadow-density-00001-0001.json
+  //hm->monitoring_->PrintDensity("density.json");
+  //hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
+}
+
+
+
+
+
+
 int main(int argc, char **argv) {
   bool has_error;
 
@@ -242,7 +344,7 @@ int main(int argc, char **argv) {
   }
 
   if (testcase) {
-    run_testcase(hm, num_items, load_factor);
+    run_testcase2(hm, num_items, load_factor);
     return 0;
   }
 
