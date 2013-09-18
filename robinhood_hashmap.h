@@ -65,12 +65,13 @@ public:
   int FillInitIndex(uint64_t index_stored, uint64_t *index_init);
   int FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance);
   void GetMetadata(std::map< std::string, std::string >& metadata);
-  uint64_t GetMinPSL();
-  uint64_t GetMaxPSL();
+  uint64_t GetMinInitDistance();
+  uint64_t GetMaxInitDistance();
 
 private:
   Bucket* buckets_;
   uint64_t num_buckets_;
+  uint64_t num_buckets_used_;
 
   uint64_t hash_function(const std::string& key) {
     static char hash[16];
@@ -83,9 +84,11 @@ private:
   Entry* DELETED_BUCKET;
   uint64_t probing_max_;
 
-  void UpdatePSL(uint64_t psl, int32_t increment);
-  std::map<uint64_t, uint64_t> psl_;
-
+  void UpdateInitDistance(uint64_t distance, int32_t increment);
+  void UpdateMinMaxInitDistance();
+  std::map<uint64_t, uint64_t> distances_;
+  uint64_t init_distance_min_;
+  uint64_t init_distance_max_;
 
 
 

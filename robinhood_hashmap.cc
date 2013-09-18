@@ -8,6 +8,9 @@ int RobinHoodHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
   monitoring_ = new hashmap::Monitoring(num_buckets_, num_buckets_, static_cast<HashMap*>(this));
+  num_buckets_used_ = 0;
+  init_distance_min_ = 0;
+  init_distance_max_ = 0;
   return 0;
 }
 
@@ -22,7 +25,7 @@ int RobinHoodHashMap::Close() {
     delete[] buckets_;
   }
 
-  psl_.clear();
+  distances_.clear();
 
   if (monitoring_ != NULL) {
     delete monitoring_;
@@ -67,10 +70,13 @@ int RobinHoodHashMap::Get(const std::string& key, std::string* value) {
 
 
 int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
+  if (num_buckets_used_ + 1 == num_buckets_) {
+    return 1;
+  }
+  num_buckets_used_ += 1;
+
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
-  // TODO: add test if the number of entries in the table is equal to
-  // num_buckets_
 
   char *data = new char[key.size() + value.size()];
   memcpy(data, key.c_str(), key.size());
@@ -83,7 +89,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
 
   uint64_t index_current = index_init;
   uint64_t probe_distance = 0;
-  uint64_t probe_current = GetMinPSL();
+  uint64_t probe_current = GetMinInitDistance();
   RobinHoodHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = NULL;
   uint64_t i;
@@ -92,7 +98,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
       monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
-      UpdatePSL(probe_current, 1);
+      UpdateInitDistance(probe_current, 1);
       buckets_[index_current].entry = entry;
       buckets_[index_current].hash = hash;
       break;
@@ -107,10 +113,11 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
         entry = entry_temp;
         hash = hash_temp;
         monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
-        UpdatePSL(probe_distance, -1);
-        UpdatePSL(probe_current, 1);
-        probe_current = probe_distance;
-        if (entry == DELETED_BUCKET) {
+        UpdateInitDistance(probe_current, 1);
+        if (entry != DELETED_BUCKET) {
+          UpdateInitDistance(probe_distance, -1);
+          probe_current = probe_distance;
+        } else {
           // The bucket we just swapped was a deleted bucket,
           // so the insertion process can stop here
           break;
@@ -138,10 +145,10 @@ int RobinHoodHashMap::Remove(const std::string& key) {
   uint64_t probe_distance = 0;
   bool found = false;
   uint64_t index_current;
-  //uint64_t psl_max = GetMaxPSL();
+  uint64_t distance_max = GetMaxInitDistance();
 
-  //for (uint64_t i = GetMinPSL(); i < probing_max_; i++) {
-  for (uint64_t i = 0; i < num_buckets_; i++) {
+  //for (uint64_t i = 0; i < num_buckets_; i++) {
+  for (uint64_t i = GetMinInitDistance(); i <= distance_max; i++) {
     index_current = (index_init + i) % num_buckets_;
 
     if (buckets_[index_current].entry == DELETED_BUCKET) {
@@ -158,19 +165,25 @@ int RobinHoodHashMap::Remove(const std::string& key) {
     if (   key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       found = true;
+      uint64_t mind = GetMinInitDistance();
+      if (i < mind) {
+        fprintf(stderr, "Found at distance %llu and min at %llu\n", i, GetMinInitDistance());
+      }
       break;
     }
   }
 
   if (found) {
+    FillDistanceToInitIndex(index_current, &probe_distance);
+    UpdateInitDistance(probe_distance, -1);
+
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = DELETED_BUCKET;
     monitoring_->UpdateNumItemsInBucket(index_init, -1);
     monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    num_buckets_used_ -= 1;
 
-    FillDistanceToInitIndex(index_current, &probe_distance);
-    UpdatePSL(probe_distance, -1);
     return 0;
   }
 
@@ -227,53 +240,61 @@ int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 
 
 void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
-  metadata["name"] = "robinhood";
+  metadata["name"] = "robinhood_inprogress";
+}
+
+uint64_t RobinHoodHashMap::GetMinInitDistance() {
+  return init_distance_min_;
+}
+
+uint64_t RobinHoodHashMap::GetMaxInitDistance() {
+  return init_distance_max_;
 }
 
 
-// Computation of the probe
-uint64_t RobinHoodHashMap::GetMaxPSL() {
+
+void RobinHoodHashMap::UpdateMinMaxInitDistance() {
+  if (distances_.size() == 0) return;
+
   std::map<uint64_t, uint64_t>::iterator it;
-  if (psl_.size() == 0) return 0;
-  uint64_t psl_max = 0;
-  for (it = psl_.begin(); it != psl_.end(); ++it) {
-    if (it->first > psl_max) {
-      psl_max = it->first;
+  //fprintf(stderr, "GetMinInitDistance() ----------------------\n");
+
+  uint64_t distance_min = std::numeric_limits<uint64_t>::max();
+  for (it = distances_.begin(); it != distances_.end(); ++it) {
+    //fprintf(stderr, "GetMinInitDistance() %llu %llu\n", it->first, it->second);
+    if (it->first < distance_min) {
+      distance_min = it->first;
     }
   }
-  //fprintf(stderr, "GetMaxPSL() %llu\n", psl_max);
-  return psl_max;
-}
+  init_distance_min_ = distance_min;
 
-
-
-
-// Computation of the probe
-uint64_t RobinHoodHashMap::GetMinPSL() {
-  std::map<uint64_t, uint64_t>::iterator it;
-  if (psl_.size() == 0) return 0;
-  uint64_t psl_min = std::numeric_limits<uint64_t>::max();
-  for (it = psl_.begin(); it != psl_.end(); ++it) {
-    //fprintf(stderr, "GetMinPSL() %llu %llu\n", it->first, it->second);
-    if (it->first < psl_min) {
-      psl_min = it->first;
+  uint64_t distance_max = 0;
+  for (it = distances_.begin(); it != distances_.end(); ++it) {
+    if (it->first > distance_max) {
+      distance_max = it->first;
     }
   }
-  return psl_min;
+  //fprintf(stderr, "GetMaxInitDistance() %llu\n", distances_max);
+  init_distance_max_ = distance_max;
+
 }
 
 
-void RobinHoodHashMap::UpdatePSL(uint64_t psl, int32_t increment) {
+void RobinHoodHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
   std::map<uint64_t, uint64_t>::iterator it;
-  it = psl_.find(psl);
-  if (it == psl_.end()) {
+  it = distances_.find(distance);
+  if (it == distances_.end()) {
     if (increment > 0) {
-      psl_[psl] = increment;
+      distances_[distance] = increment;
+      UpdateMinMaxInitDistance();
+    } else {
+      fprintf(stderr, "UpdateInitDistance() neg on not exist %llu %d\n", distance, increment);
     }
   } else {
-    psl_[psl] += increment;
-    if (psl_[psl] <= 0) {
-      psl_.erase(it); 
+    distances_[distance] += increment;
+    if (distances_[distance] <= 0) {
+      distances_.erase(it); 
+      UpdateMinMaxInitDistance();
     }
   }
 }

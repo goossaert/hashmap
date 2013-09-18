@@ -198,9 +198,9 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
 
-  uint64_t min_psl = hm_->GetMinPSL();
+  uint64_t min_psl = hm_->GetMinInitDistance();
 
-  fprintf(stderr, "psl search size:%zu min_psl:%llu\n", psl_search_.size(), hm_->GetMinPSL());
+  fprintf(stderr, "psl search size:%zu min_psl:%llu\n", psl_search_.size(), hm_->GetMinInitDistance());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);
