@@ -7,9 +7,12 @@ void Monitoring::PrintInfo(FILE* fd, std::string metric) {
   std::map<std::string, std::string> metadata;
   hm_->GetMetadata(metadata);
   fprintf(fd, " \"algorithm\": \"%s\",\n", metadata["name"].c_str());
-  fprintf(fd, " \"load_factor\": \"%.2f\",\n", load_factor_);
-  fprintf(fd, " \"num_buckets\": %llu,\n", num_buckets_);
+  fprintf(fd, " \"testcase\": \"%s\",\n", testcase_.c_str());
   fprintf(fd, " \"metric\": \"%s\",\n", metric.c_str());
+  fprintf(fd, " \"parameters_testcase\": %s,\n", parameters_testcase_json_.c_str());
+  fprintf(fd, " \"parameters_testcase_string\": \"%s\",\n", parameters_testcase_string_.c_str());
+  fprintf(fd, " \"parameters_hashmap\": %s,\n", metadata["parameters_hashmap"].c_str());
+  fprintf(fd, " \"parameters_hashmap_string\": \"%s\",\n", metadata["parameters_hashmap_string"].c_str());
   fprintf(fd, " \"instance\": %llu,\n", instance_);
   fprintf(fd, " \"cycle\": %llu,\n", cycle_);
 }

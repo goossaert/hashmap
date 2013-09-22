@@ -30,6 +30,9 @@ public:
     max_num_items_in_bucket_ = max_num_items_in_bucket;
     size_bucket_ = 4;
     hm_ = hm;
+    fprintf(stderr, "starting\n");
+    //extra_parameters_ = "blah";
+    //fprintf(stderr, "%s\n", extra_parameters_.c_str());
   }
 
   virtual ~Monitoring() {
@@ -56,7 +59,17 @@ public:
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
   void SetInstance(uint64_t instance) { instance_ = instance; }
 
-  void SetLoadFactor(double load_factor) { load_factor_ = load_factor; }
+  void SetTestcase(std::string str) {
+    testcase_ = str;
+  }
+
+  void SetParametersTestcaseString(std::string str) {
+    parameters_testcase_string_ = str;
+  }
+
+  void SetParametersTestcaseJson(std::string str) {
+    parameters_testcase_json_ = str;
+  }
 
 
 private:
@@ -69,9 +82,9 @@ private:
   HashMap *hm_;
   uint64_t cycle_;
   uint64_t instance_;
-  double load_factor_;
-
-
+  std::string parameters_testcase_string_;
+  std::string parameters_testcase_json_;
+  std::string testcase_;
 
   uint64_t AlignOffsetToBlock(uint64_t offset, uint64_t size_block) {
     return offset - offset % size_block;

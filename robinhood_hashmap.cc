@@ -240,7 +240,12 @@ int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 
 
 void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
-  metadata["name"] = "robinhood_inprogress";
+  metadata["name"] = "robinhood";
+  char buffer[1024]; 
+  sprintf(buffer, "{\"num_buckets\": %llu, \"probing_max\": %llu}", num_buckets_, probing_max_);
+  metadata["parameters_hashmap"] = buffer;
+  sprintf(buffer, "nb%llu-pm%llu", num_buckets_, probing_max_);
+  metadata["parameters_hashmap_string"] = buffer;
 }
 
 uint64_t RobinHoodHashMap::GetMinInitDistance() {
@@ -254,29 +259,27 @@ uint64_t RobinHoodHashMap::GetMaxInitDistance() {
 
 
 void RobinHoodHashMap::UpdateMinMaxInitDistance() {
+  init_distance_min_ = 0;
+  init_distance_max_ = 0;
   if (distances_.size() == 0) return;
 
   std::map<uint64_t, uint64_t>::iterator it;
   //fprintf(stderr, "GetMinInitDistance() ----------------------\n");
 
-  uint64_t distance_min = std::numeric_limits<uint64_t>::max();
+  init_distance_min_ = std::numeric_limits<uint64_t>::max();
+  init_distance_max_ = 0;
   for (it = distances_.begin(); it != distances_.end(); ++it) {
     //fprintf(stderr, "GetMinInitDistance() %llu %llu\n", it->first, it->second);
-    if (it->first < distance_min) {
-      distance_min = it->first;
+    if (it->first < init_distance_min_) {
+      init_distance_min_ = it->first;
     }
-  }
-  init_distance_min_ = distance_min;
 
-  uint64_t distance_max = 0;
-  for (it = distances_.begin(); it != distances_.end(); ++it) {
-    if (it->first > distance_max) {
-      distance_max = it->first;
+    if (it->first > init_distance_max_) {
+      init_distance_max_ = it->first;
     }
   }
+
   //fprintf(stderr, "GetMaxInitDistance() %llu\n", distances_max);
-  init_distance_max_ = distance_max;
-
 }
 
 

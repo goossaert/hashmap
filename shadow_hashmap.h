@@ -33,6 +33,7 @@ public:
     buckets_ = NULL;
     num_buckets_ = size;
     size_neighborhood_ = size_neighborhood_start;
+    size_neighborhood_start_ = size_neighborhood_start;
     size_neighborhood_max_ = size_neighborhood_end;
     size_probing_ = size_probing;
   }
@@ -87,6 +88,7 @@ private:
   }
 
   uint32_t size_neighborhood_;
+  uint32_t size_neighborhood_start_;
   uint32_t size_neighborhood_max_;
   uint32_t size_probing_;
 

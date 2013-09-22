@@ -241,6 +241,11 @@ int ShadowHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
 
 void ShadowHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "shadow";
+  char buffer[1024]; 
+  sprintf(buffer, "{\"num_buckets\": %llu, \"size_probing\": %u, \"size_neighborhood_start\": %u, \"size_neighborhood_end\": %u}", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
+  metadata["parameters_hashmap"] = buffer;
+  sprintf(buffer, "nb%llu-sp%u-sns%u-sne%u", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
+  metadata["parameters_hashmap_string"] = buffer;
 }
 
 

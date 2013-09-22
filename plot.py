@@ -22,34 +22,48 @@ def compute_average(datapoints):
     return sum_metric / num_freq
 
 
-def aggregate_datapoints(dirpath, testcase):
+def aggregate_datapoints(dirpath, testcases):
     aggregate = {}
     for dirname, dirnames, filenames in os.walk(dirpath):
         # print path to all filenames.
         for filename in filenames:
-            if filename.startswith(testcase):
-                filepath = os.path.join(dirname, filename)
-                #print "Reading file [%s]" % (filepath,)
-                f = open(filepath, 'r')
-                text = f.read()
-                data = json.loads(text)
-                f.close()
-                average = compute_average(data['datapoints'])
-                #print "average %f" % (avg)
-                ia = data['algorithm']
-                im = data['metric']
-                ib = data['num_buckets']
-                il = data['load_factor']
-                ii = data['instance']
-                ic = data['cycle']
-                ia = '%s-%s-%s' % (ia, ib, il)
-                if im not in aggregate:
-                    aggregate[im] = {}
-                if ia not in aggregate[im]:
-                    aggregate[im][ia] = {}
-                if ic not in aggregate[im][ia]:
-                    aggregate[im][ia][ic] = []
-                aggregate[im][ia][ic].append(average)
+            if any(filename.startswith(testcase) for testcase in testcases.split(',')):
+                try:
+                    filepath = os.path.join(dirname, filename)
+                    #print "Reading file [%s]" % (filepath,)
+                    f = open(filepath, 'r')
+                    text = f.read()
+                    data = json.loads(text)
+                    f.close()
+                    average = compute_average(data['datapoints'])
+                    #print "average %f" % (avg)
+                    ia = data['algorithm']
+                    im = data['metric']
+                    if 'load_factor' in data:
+                        il = data['load_factor']
+                        ib = data['num_buckets']
+                        ia = '%s-%s-%s' % (ia, ib, il)
+                    else:
+                        ib = data['parameters_hashmap_string']
+                        ia = '%s-%s' % (ia, ib)
+                    ii = data['instance']
+                    ic = data['cycle']
+                    if 'parameters_testcase' in data:
+                        ip = data['parameters_testcase_string']
+                        if ip.strip():
+                            ia = '%s-%s' % (ia, ip)
+                    if 'testcase' in data:
+                        ia = '%s-%s' % (data['testcase'], ia)
+                    if im not in aggregate:
+                        aggregate[im] = {}
+                    if ia not in aggregate[im]:
+                        aggregate[im][ia] = {}
+                    if ic not in aggregate[im][ia]:
+                        aggregate[im][ia][ic] = []
+                    aggregate[im][ia][ic].append(average)
+                except:
+                    print 'Crashed at [%s]' % (filename)
+                    sys.exit(1)
 
     return aggregate 
 

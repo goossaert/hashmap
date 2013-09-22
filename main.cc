@@ -12,6 +12,8 @@
 #include "bitmap_hashmap.h"
 #include "shadow_hashmap.h"
 
+#include "testcase.h"
+
 
 
 std::string concatenate(std::string const& str, int i)
@@ -56,6 +58,10 @@ void show_usage() {
   fprintf(stdout, "                     * robinhood: robin hood hashing\n");
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
+  fprintf(stdout, " --testcase        test case to use. Possible values are:\n");
+  fprintf(stdout, "                     * basic: loading the table with random keys\n");
+  fprintf(stdout, "                     * batch: load the table, then remove a large batch, and re-insert a large batch.\n");
+  fprintf(stdout, "                     * ripple: load the table, then do a series of remove-insetion operations.\n");
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for linear probing algorithm (optional):\n");
@@ -79,208 +85,20 @@ void show_usage() {
   fprintf(stdout, " --size_nh_end     ending size of the neighborhoods (default=32)\n");
   fprintf(stdout, "\n");
 
+  fprintf(stdout, "Parameters for the batch test case (optional):\n");
+  fprintf(stdout, " --load_factor_max   maxium load factor at which the table should be used (default=.7)\n");
+  fprintf(stdout, " --load_factor_step  load factor by which items in the table should be removed and inserted (default=.1)\n");
+  fprintf(stdout, "\n");
+
+  fprintf(stdout, "Parameters for the ripple test case (optional):\n");
+  fprintf(stdout, " --load_factor_max   maxium load factor at which the table should be used (default=.7)\n");
+  fprintf(stdout, " --load_factor_step  load factor by which items in the table should be removed and inserted (default=.1)\n");
+  fprintf(stdout, "\n");
+
   fprintf(stdout, "Examples:\n");
   fprintf(stdout, "./hashmap --algo bitmap --num_buckets 1000000\n");
   fprintf(stdout, "./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64\n");
 }
-
-
-
-void run_testcase(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor) {
-  std::set<std::string> keys;
-  std::string key;
-  int key_size = 16;
-  char buffer[key_size + 1];
-  buffer[key_size] = '\0';
-  char filename[1024];
-  char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  uint32_t num_items;
-  uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
-  uint32_t num_items_small = (uint32_t)((double)num_buckets * load_factor); // 0.1
-  fprintf(stdout, "num_items %u %u\n", num_items, num_items_small);
-
-  std::string testcase = "batch";
-  if (exists_or_mkdir(testcase.c_str()) != 0) {
-    fprintf(stderr, "Could not create directory [%s]\n", testcase.c_str());
-    exit(1);
-  }
-
-  std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 10; i++) {
-    num_items = num_items_big;
-    srand(i);
-    keys.clear();
-    hm->Open();
-    for (int cycle = 0; cycle < 50; cycle++) {
-      fprintf(stderr, "instance %d cycle %d\n", i, cycle);
-      for (uint32_t j = 0; j < num_items; j++) {
-        bool is_valid = false;
-        while (!is_valid) {
-          for (int k = 0; k < key_size; k++) {
-            buffer[k] = alpha[rand() % 62];
-          }
-          key = buffer;
-          it_find = keys.find(key);
-          if (it_find == keys.end()) {
-            is_valid = true;
-          } else {
-            //fprintf(stdout, "%s\n", key.c_str());
-            //fprintf(stdout, "%d\n", keys.size());
-          }
-        }
-        keys.insert(key);
-        int ret_put = hm->Put(key, key);
-        //fprintf(stderr, "Put() [%s]\n", key.c_str());
-        if (ret_put != 0) {
-          fprintf(stderr, "Put() error\n");
-        }
-      }
-      printf("keys insert %zu\n", keys.size());
-
-      hm->monitoring_->SetInstance(i);
-      hm->monitoring_->SetCycle(cycle);
-      hm->monitoring_->SetLoadFactor(load_factor);
-
-      std::map<std::string, std::string> metadata;
-      hm->GetMetadata(metadata);
-      sprintf(filename, "%s/%s-%s-%llu-%.2f-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
-      hm->monitoring_->PrintDensity(filename);
-
-      fprintf(stderr, "PrintDensity() out\n");
-      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
-      //hm->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename, "%s/%s-%s-%llu-%.2f-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
-      fprintf(stderr, "filename psl %s\n", filename);
-      hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
-      
-      for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
-        uint64_t r = rand();
-        uint64_t offset = r % keys.size();
-        //printf("delete index %d -- offset %llu -- rand %llu\n", index_del, offset, r);
-        std::set<std::string>::iterator it(keys.begin());
-        std::advance(it, offset);
-        //fprintf(stdout, "str: %s\n", (*it).c_str());
-        //key = buffer;
-        int ret_remove = hm->Remove(*it);
-        //fprintf(stderr, "Remove() [%s]\n", it->c_str());
-        if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
-        keys.erase(it);
-      }
-      printf("keys erase %zu\n", keys.size());
-      num_items = num_items_small;
-    }
-
-    fprintf(stderr, "close\n");
-    hm->Close();
-    fprintf(stderr, "ok\n");
-  }
-
-  // testcase-algo-metric-runnumber-step.json
-  // batch50-shadow-density-00001-0001.json
-  //hm->monitoring_->PrintDensity("density.json");
-  //hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
-}
-
-
-
-
-void run_testcase2(hashmap::HashMap *hm, uint64_t num_buckets, double load_factor) {
-  std::set<std::string> keys;
-  std::string key;
-  int key_size = 16;
-  char buffer[key_size + 1];
-  buffer[key_size] = '\0';
-  char filename[1024];
-  char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  uint32_t num_items;
-  uint32_t num_items_big = (uint32_t)((double)num_buckets * load_factor);
-  uint32_t num_items_small = (uint32_t)((double)num_buckets * load_factor); // 0.1
-  fprintf(stdout, "num_items %u %u\n", num_items, num_items_small);
-
-  std::string testcase = "batch";
-  if (exists_or_mkdir(testcase.c_str()) != 0) {
-    fprintf(stderr, "Could not create directory [%s]\n", testcase.c_str());
-    exit(1);
-  }
-
-  std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 10; i++) {
-    num_items = num_items_big;
-    srand(i);
-    keys.clear();
-    hm->Open();
-    for (int cycle = 0; cycle < 50; cycle++) {
-      fprintf(stderr, "instance %d cycle %d\n", i, cycle);
-      for (uint32_t j = 0; j < num_items; j++) {
-        bool is_valid = false;
-        while (!is_valid) {
-          for (int k = 0; k < key_size; k++) {
-            buffer[k] = alpha[rand() % 62];
-          }
-          key = buffer;
-          it_find = keys.find(key);
-          if (it_find == keys.end()) {
-            is_valid = true;
-          } else {
-            //fprintf(stdout, "%s\n", key.c_str());
-            //fprintf(stdout, "%d\n", keys.size());
-          }
-        }
-        keys.insert(key);
-        int ret_put = hm->Put(key, key);
-        //fprintf(stderr, "Put() [%s]\n", key.c_str());
-        if (ret_put != 0) {
-          fprintf(stderr, "Put() error\n");
-        }
-
-        if (cycle > 0) {
-          uint64_t r = rand();
-          uint64_t offset = r % keys.size();
-          //printf("delete index %d -- offset %llu -- rand %llu\n", index_del, offset, r);
-          std::set<std::string>::iterator it(keys.begin());
-          std::advance(it, offset);
-          //fprintf(stdout, "str: %s\n", (*it).c_str());
-          //key = buffer;
-          int ret_remove = hm->Remove(*it);
-          //fprintf(stderr, "Remove() [%s]\n", it->c_str());
-          if (ret_remove != 0) fprintf(stderr, "Error while removing\n");
-          keys.erase(it);
-        }
-      }
-      printf("keys insert %zu\n", keys.size());
-
-      hm->monitoring_->SetInstance(i);
-      hm->monitoring_->SetCycle(cycle);
-      hm->monitoring_->SetLoadFactor(load_factor);
-
-      std::map<std::string, std::string> metadata;
-      hm->GetMetadata(metadata);
-      sprintf(filename, "%s/%s-%s-%llu-%.2f-density-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
-      hm->monitoring_->PrintDensity(filename);
-
-      fprintf(stderr, "PrintDensity() out\n");
-      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
-      //hm->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename, "%s/%s-%s-%llu-%.2f-psl-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), num_buckets, load_factor, i, cycle);
-      fprintf(stderr, "filename psl %s\n", filename);
-      hm->monitoring_->PrintProbingSequenceLengthSearch(filename);
-
-      num_items = num_items_small;
-    }
-
-    fprintf(stderr, "close\n");
-    hm->Close();
-    fprintf(stderr, "ok\n");
-  }
-
-  // testcase-algo-metric-runnumber-step.json
-  // batch50-shadow-density-00001-0001.json
-  //hm->monitoring_->PrintDensity("density.json");
-  //hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
-}
-
 
 
 
@@ -303,9 +121,10 @@ int main(int argc, char **argv) {
   uint32_t size_neighborhood_end = 32;
   uint32_t size_probing = 4096;
   uint32_t num_buckets = 10000;
-  double load_factor = 0.8;
+  double load_factor_max = 0.7;
+  double load_factor_step = 0.1;
   std::string algorithm = "";
-  bool testcase = false;
+  std::string testcase = "";
 
   if (argc > 2) {
     for (int i = 1; i < argc; i += 2 ) {
@@ -320,9 +139,14 @@ int main(int argc, char **argv) {
       } else if (strcmp(argv[i], "--size_probing" ) == 0) {
         size_probing = atoi(argv[i+1]);
       } else if (strcmp(argv[i], "--testcase" ) == 0) {
-        testcase = true;
-      } else if (strcmp(argv[i], "--load_factor" ) == 0) { // only for the testcase
-        load_factor = atof(argv[i+1]);
+        testcase = std::string(argv[i+1]);
+      } else if (strcmp(argv[i], "--load_factor_max" ) == 0) {
+        load_factor_max = atof(argv[i+1]);
+      } else if (strcmp(argv[i], "--load_factor_step" ) == 0) {
+        load_factor_step = atof(argv[i+1]);
+      } else {
+        fprintf(stderr, "Unknown parameter [%s]\n", argv[i]);
+        exit(-1); 
       }
     }
   }
@@ -335,17 +159,26 @@ int main(int argc, char **argv) {
   } else if (algorithm == "shadow") {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else if (algorithm == "linear") {
-    hm = new hashmap::ProbingHashMap(num_items, 5000);
+    hm = new hashmap::ProbingHashMap(num_items, size_probing);
   } else if (algorithm == "robinhood") {
     hm = new hashmap::RobinHoodHashMap(num_items);
   } else {
-    fprintf(stderr, "Algorithm unknown [%s]\n", algorithm.c_str());
+    fprintf(stderr, "Unknown algorithm [%s]\n", algorithm.c_str());
     exit(-1); 
   }
 
-  if (testcase) {
-    run_testcase2(hm, num_items, load_factor);
+  if (testcase == "batch") {
+    //run_testcase2(hm, num_items, load_factor_max);
+    hashmap::BatchTestCase tc(hm, num_items, load_factor_max, load_factor_step);
+    tc.run();
     return 0;
+  } else if (testcase == "ripple") {
+    hashmap::RippleTestCase tc(hm, num_items, load_factor_max, load_factor_step);
+    tc.run();
+    return 0;
+  } else if (testcase != "") {
+    fprintf(stderr, "Error: testcase is unknown [%s]\n", testcase.c_str());
+    return 1;
   }
 
   hm->Open();
