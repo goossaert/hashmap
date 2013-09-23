@@ -37,7 +37,6 @@ public:
   virtual int GetBucketState(int index) = 0;
   virtual int FillInitIndex(uint64_t index_stored, uint64_t *index_init) = 0;
   virtual void GetMetadata(std::map< std::string, std::string >& metadata) = 0;
-  virtual uint64_t GetMinInitDistance() { return 0; };
 
   Monitoring *monitoring_;
 };

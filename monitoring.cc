@@ -201,9 +201,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
   std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
 
-  uint64_t min_psl = hm_->GetMinInitDistance();
-
-  fprintf(stderr, "psl search size:%zu min_psl:%llu\n", psl_search_.size(), hm_->GetMinInitDistance());
+  fprintf(stderr, "psl search size:%zu\n", psl_search_.size());
 
   for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
     it_find = counts.find(it_psl->second);
@@ -229,9 +227,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
-    int64_t val1 = it_count->first;
-    int64_t val2 = min_psl;
-    fprintf(fd, "     \"%lld\": %llu", val1 - val2, it_count->second);
+    fprintf(fd, "     \"%llu\": %llu", it_count->first, it_count->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
