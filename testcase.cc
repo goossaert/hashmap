@@ -86,7 +86,7 @@ void BatchTestCase::run() {
   std::string testcase = "batch";
   std::string directory = "results";
   if (exists_or_mkdir(directory.c_str()) != 0) {
-    fprintf(stderr, "Could not create directory [%s]\n", testcase.c_str());
+    fprintf(stderr, "Could not create directory [%s]\n", directory.c_str());
     exit(1);
   }
 
@@ -99,10 +99,28 @@ void BatchTestCase::run() {
 
   std::set<std::string>::iterator it_find;
   for (int i = 0; i < 10; i++) {
+
+
+    
     num_items = num_items_big;
     srand(i);
     keys.clear();
     hm_->Open();
+
+
+    std::map<std::string, std::string> metadata;
+    hm_->GetMetadata(metadata);
+
+    char directory_sub_buffer[2048];
+    sprintf(directory_sub_buffer, "%s/%s-%s-%s", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str());
+    std::string directory_sub(directory_sub_buffer);
+    if (exists_or_mkdir(directory_sub.c_str()) != 0) {
+      fprintf(stderr, "Could not create directory [%s]\n", directory_sub.c_str());
+      exit(1);
+    }
+
+
+
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
       for (uint32_t j = 0; j < num_items; j++) {
@@ -135,17 +153,15 @@ void BatchTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-      std::map<std::string, std::string> metadata;
-      hm_->GetMetadata(metadata);
 
-      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       hm_->monitoring_->PrintDensity(filename);
 
       //fprintf(stderr, "PrintDensity() out\n");
       //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       //hm_->monitoring_->PrintNumScannedBlocks(filename);
 
-      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
       
