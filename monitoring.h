@@ -55,6 +55,8 @@ public:
 
   void GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
+  void GetNumSecondaryAccesses(std::map<uint64_t, uint64_t>& out_num_secondary_accesses);
+  void PrintNumSecondaryAccesses(std::string filepath);
   void PrintInfo(FILE* fd, std::string metric);
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
   void SetInstance(uint64_t instance) { instance_ = instance; }

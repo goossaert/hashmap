@@ -72,9 +72,21 @@ class RippleTestCase: public TestCase {
 };
 
 
+class LoadingTestCase: public TestCase {
 
+ public:
+  LoadingTestCase(HashMap *hm, uint64_t num_buckets) {
+    hm_ = hm;
+    num_buckets_ = num_buckets;
+  }
+  virtual void run();
+
+ private:
+  uint64_t num_buckets_;
 
 
 };
+
+}; // namespace
 
 #endif

@@ -141,7 +141,6 @@ void Monitoring::PrintDensity(std::string filepath) {
     fprintf(stderr, "1\n");
   }
 
-
   fprintf(fd, "{\n");
   fprintf(stderr, "2\n");
   PrintInfo(fd, "density");
@@ -278,42 +277,90 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
   } else {
     fd = fopen(filepath.c_str(), "w");
   }
+  fprintf(fd, "[\n");
 
-  fprintf(fd, "{\n");
-  PrintInfo(fd, "num_scanned_blocks");
-  fprintf(fd, " \"datapoints\":\n");
-  fprintf(fd, "    [");
-
+  char metric[1024];
   std::vector< std::map<uint64_t, uint64_t> > num_scanned_blocks(6);
   GetNumScannedBlocks(num_scanned_blocks, hm_);
   int size_blocks[6] = { 1, 8, 16, 32, 64, 128 };
   for (int i = 0; i < 6; i++) {
     if (i > 0) fprintf(fd, ",");
-    fprintf(fd, "\n");
-    fprintf(fd, "     {\"block_size\": %d,\n", size_blocks[i]);
-    fprintf(fd, "      \"datapoints\": \n");
-    fprintf(fd, "         [");
+    fprintf(fd, "{\n");
+    sprintf(metric, "num_scanned_blocks_%d", size_blocks[i]);
+    PrintInfo(fd, metric);
+    fprintf(fd, " \"datapoints\":\n");
+    fprintf(fd, "    {");
     std::map<uint64_t, uint64_t>::iterator it;
     bool first_item = true;
     for (it = num_scanned_blocks[i].begin(); it != num_scanned_blocks[i].end(); ++it) {
       if (!first_item) fprintf(fd, ",");
       first_item = false;
       fprintf(fd, "\n");
-      fprintf(fd, "          {\"%llu\": %llu}", it->first, it->second);
+      fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
     }
     fprintf(fd, "\n");
-    fprintf(fd, "         ]\n");
-    fprintf(fd, "     }");
+    fprintf(fd, "    }\n");
+    fprintf(fd, "}\n");
   }
 
+  fprintf(fd, "]\n");
+  if (filepath != "stdout") {
+    fclose(fd); 
+  }
+}
+
+
+void Monitoring::GetNumSecondaryAccesses(std::map<uint64_t, uint64_t>& out_num_secondary_accesses) {
+
+  std::map<uint64_t, uint64_t>::iterator it, it_find;
+  for (it = density_.begin(); it != density_.end(); ++it) {
+    for (unsigned int i = 1; i <= it->first; i++) {
+      it_find = out_num_secondary_accesses.find(i);
+      if (it_find == out_num_secondary_accesses.end()) {
+        out_num_secondary_accesses[i] = 0;
+      }
+      out_num_secondary_accesses[i] += it->second;
+    }
+  }
+}
+
+
+
+void Monitoring::PrintNumSecondaryAccesses(std::string filepath) {
+  // TODO: fix bug that can be reached with:
+  // ./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  std::map<uint64_t, uint64_t> num_secondary_accesses;
+  GetNumSecondaryAccesses(num_secondary_accesses);
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "num_secondary_accesses");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {");
+  std::map<uint64_t, uint64_t>::iterator it;
+  bool first_item = true;
+  for (it = num_secondary_accesses.begin(); it != num_secondary_accesses.end(); ++it) {
+    if (!first_item) fprintf(fd, ",");
+    first_item = false;
+    fprintf(fd, "\n");
+    fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
+  }
   fprintf(fd, "\n");
-  fprintf(fd, "    ]\n");
+  fprintf(fd, "    }\n");
   fprintf(fd, "}\n");
 
   if (filepath != "stdout") {
     fclose(fd); 
   }
 }
+
+
 
 
 }; // end namespace hashmap

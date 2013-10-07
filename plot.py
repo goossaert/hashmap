@@ -80,41 +80,51 @@ def aggregate_datapoints(dirpath, testcases, shifts):
                 #print "Reading file [%s]" % (filepath,)
                 f = open(filepath, 'r')
                 text = f.read()
-                data = json.loads(text)
+                data_items = json.loads(text)
                 f.close()
                 has_shift = shifts and any(shift in filename for shift in shifts.split(','))
-                average, variance, stddev = compute_average(data['datapoints'], has_shift)
-                median, perc95  = compute_median(data['datapoints'], has_shift)
-                #print "average %f" % (avg)
-                ia = data['algorithm']
-                im = data['metric']
-                ib = data['parameters_hashmap_string']
-                ia = '%s-%s' % (ia, ib)
+                if not isinstance(data_items, list):
+                    data_items = [data_items]
 
-                ii = data['instance']
-                ic = data['cycle']
+                #import pprint
 
-                it = data['testcase']
-                ip = data['parameters_testcase_string']
-                it = '%s-%s' % (it, ip)
-                if im not in aggregate:
-                    aggregate[im] = {}
-                if it not in aggregate[im]:
-                    aggregate[im][it] = {}
-                if ia not in aggregate[im][it]:
-                    aggregate[im][it][ia] = {}
-                if ic not in aggregate[im][it][ia]:
-                    aggregate[im][it][ia][ic] = {}
+                for data in data_items:
+                    #print 'data'
+                    #pprint.pprint( data_items )
+                    #print 'sub'
+                    #pprint.pprint( data)
+                    average, variance, stddev = compute_average(data['datapoints'], has_shift)
+                    median, perc95  = compute_median(data['datapoints'], has_shift)
+                    #print "average %f" % (avg)
+                    ia = data['algorithm']
+                    im = data['metric']
+                    ib = data['parameters_hashmap_string']
+                    ia = '%s-%s' % (ia, ib)
 
-                for m in ['mean', 'median', 'perc95', 'standard_deviation', 'variance']:
-                    if m not in aggregate[im][it][ia][ic]:
-                        aggregate[im][it][ia][ic][m] = []
+                    ii = data['instance']
+                    ic = data['cycle']
 
-                aggregate[im][it][ia][ic]['mean'].append(average)
-                aggregate[im][it][ia][ic]['standard_deviation'].append(stddev)
-                aggregate[im][it][ia][ic]['variance'].append(variance)
-                aggregate[im][it][ia][ic]['median'].append(median)
-                aggregate[im][it][ia][ic]['perc95'].append(perc95)
+                    it = data['testcase']
+                    ip = data['parameters_testcase_string']
+                    it = '%s-%s' % (it, ip)
+                    if im not in aggregate:
+                        aggregate[im] = {}
+                    if it not in aggregate[im]:
+                        aggregate[im][it] = {}
+                    if ia not in aggregate[im][it]:
+                        aggregate[im][it][ia] = {}
+                    if ic not in aggregate[im][it][ia]:
+                        aggregate[im][it][ia][ic] = {}
+
+                    for m in ['mean', 'median', 'perc95', 'standard_deviation', 'variance']:
+                        if m not in aggregate[im][it][ia][ic]:
+                            aggregate[im][it][ia][ic][m] = []
+
+                    aggregate[im][it][ia][ic]['mean'].append(average)
+                    aggregate[im][it][ia][ic]['standard_deviation'].append(stddev)
+                    aggregate[im][it][ia][ic]['variance'].append(variance)
+                    aggregate[im][it][ia][ic]['median'].append(median)
+                    aggregate[im][it][ia][ic]['perc95'].append(perc95)
             except:
                 print 'Crashed at file: [%s/%s]' % (dirname, filename)
                 print traceback.print_exc()
@@ -223,14 +233,17 @@ def plot_aggregates(aggregates):
                     for key, value in sorted(aggregates[im][it][ia].items()):
                         if not value:
                             value = [0]
-                        value_ref = aggregates[im][it][ia_ref][key][statistic]
+                        if ia_ref:
+                            value_ref = aggregates[im][it][ia_ref][key][statistic]
+                        else:
+                            value_ref = None
                         xs.append(key)
                         print 'key', key, 'value', value
                         if statistic == 'mean':
                             s = aggregates[im][it][ia][key]['standard_deviation']
                             stddevs.append( (float(sum(s))/float(len(s))) / 2.0 )
 
-                        if ia != ia_ref:
+                        if ia_ref != None and ia != ia_ref:
                             p_value = 0 #randomized_paired_sample_t_test(value_ref, value, details)
                             print 't-test ', p_value
                             p_values.append(p_value)

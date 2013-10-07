@@ -59,7 +59,7 @@ void show_usage() {
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
   fprintf(stdout, " --testcase        test case to use. Possible values are:\n");
-  fprintf(stdout, "                     * basic: loading the table with random keys\n");
+  fprintf(stdout, "                     * loading: load the table until it is full (does not perform any removals).\n");
   fprintf(stdout, "                     * batch: load the table, then remove a large batch, and re-insert a large batch.\n");
   fprintf(stdout, "                     * ripple: load the table, then do a series of remove-insetion operations.\n");
   fprintf(stdout, "\n");
@@ -167,7 +167,12 @@ int main(int argc, char **argv) {
     exit(-1); 
   }
 
-  if (testcase == "batch") {
+  if (testcase == "loading") {
+    //run_testcase2(hm, num_items, load_factor_max);
+    hashmap::LoadingTestCase tc(hm, num_items);
+    tc.run();
+    return 0;
+  } else if (testcase == "batch") {
     //run_testcase2(hm, num_items, load_factor_max);
     hashmap::BatchTestCase tc(hm, num_items, load_factor_max, load_factor_step);
     tc.run();
