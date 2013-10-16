@@ -167,6 +167,35 @@ void BatchTestCase::run() {
       sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
+
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-blocks--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumScannedBlocks(filename);
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-secondary--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumSecondaryAccesses(filename);
+
+
+
+
+
+
       
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
@@ -231,6 +260,18 @@ void RippleTestCase::run() {
     srand(i);
     keys.clear();
     hm_->Open();
+
+    std::map<std::string, std::string> metadata;
+    hm_->GetMetadata(metadata);
+
+    char directory_sub_buffer[2048];
+    sprintf(directory_sub_buffer, "%s/%s-%s-%s", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str());
+    std::string directory_sub(directory_sub_buffer);
+    if (exists_or_mkdir(directory_sub.c_str()) != 0) {
+      fprintf(stderr, "Could not create directory [%s]\n", directory_sub.c_str());
+      exit(1);
+    }
+
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
       for (uint32_t j = 0; j < num_items; j++) {
@@ -277,18 +318,43 @@ void RippleTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-      std::map<std::string, std::string> metadata;
-      hm_->GetMetadata(metadata);
-      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+
+
+      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       hm_->monitoring_->PrintDensity(filename);
 
       fprintf(stderr, "PrintDensity() out\n");
       //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
       //hm->monitoring_->PrintNumScannedBlocks(filename);
 
-      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-blocks--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumScannedBlocks(filename);
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-secondary--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumSecondaryAccesses(filename);
+
+
+      
 
       num_items = num_items_small;
     }
