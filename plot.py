@@ -9,6 +9,7 @@ import traceback
 import random
 import math
 
+import matplotlib
 import matplotlib.pyplot as plt
 import pprint
 
@@ -67,17 +68,23 @@ def compute_median(datapoints, has_shift):
 
 
 
-def aggregate_datapoints(dirpath, testcases, shifts):
+def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
+    print testcases, algorithms, shifts
     aggregate = {}
     for dirname, dirnames, filenames in os.walk(dirpath):
         # print path to all filenames.
         for filename in filenames:
-            if not any(filename.startswith(testcase) for testcase in testcases.split(',')):
+            if testcases != 'all' and not any(filename.startswith(testcase) for testcase in testcases.split(',')):
+                print 'skipping ' + filename
+                continue
+
+            if algorithms != 'all' and not any(algorithm in filename for algorithm in algorithms.split(',')):
+                print 'skipping ' + filename
                 continue
 
             try:
                 filepath = os.path.join(dirname, filename)
-                #print "Reading file [%s]" % (filepath,)
+                print "Reading file [%s]" % (filepath,)
                 f = open(filepath, 'r')
                 text = f.read()
                 data_items = json.loads(text)
@@ -185,6 +192,119 @@ def randomized_paired_sample_t_test(reference, candidate, details):
 
      
 
+def plot_robinhood(aggregates):
+
+    colors = {'red': '#cd7058', 'blue': '#599ad3'}
+
+    font = {'family' : 'normal',
+            'weight' : 'normal',
+            'size'   : 14}
+    matplotlib.rc('font', **font)
+
+
+    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'standard_deviation', 'variance']):
+        for index_metric, im in enumerate(aggregates.keys()):
+            if  'probing_sequence_length_search' not in im:
+                continue 
+            for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
+                if '0.9' in it: continue
+                fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
+                ax = fig.add_subplot(111)
+                lines = []
+                names = []
+
+                for ia in sorted(aggregates[im][it].keys()):
+                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000', '100000']]) \
+                      or not any(algo in ia for algo in ['probing', 'robinhood']):
+                        v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000', '100000']])
+                        v2 = any(algo in ia for algo in ['probing', 'robinhood'])
+                        print "skip [%s] - %s %s" % (ia, v1, v2)
+                        continue
+
+                    xs = []
+                    ys = []
+
+                    for cycle, stats in sorted(aggregates[im][it][ia].items()):
+                        if 'loading' in it:
+                            xs.append((cycle * 2.0) / 100.0)
+                        else:
+                            xs.append(cycle)
+                        ys.append(sum(stats[statistic]) / len(stats[statistic]))
+
+                    if 'probing' in ia:
+                        color = colors['blue']
+                    else:
+                        color = colors['red']
+                    #names.append('%s-%s' % (ia, it))
+                    name = ''
+                    if 'robinhood' in ia:
+                        name = 'Robin Hood'
+                    elif 'probing' in ia:
+                        name = 'Linear probing'
+                    else:
+                        name = 'wtf?'
+
+                    if '10000-' in ia:
+                        name = name + ' (10k)'
+                        style = '-'
+                    else:
+                        name = name + ' (100k)'
+                        style = ':'
+
+                    line_current, = ax.plot(xs, ys, style, color=color, linewidth=3)
+                    names.append(name)
+                    lines.append(line_current)
+
+
+                print len(lines), len(names)
+
+
+                if 'loading' in it:
+                    ax.set_xlabel('Load factor')
+                else:
+                    ax.set_xlabel('Iterations')
+
+                if statistic == 'mean':
+                    ax.set_ylabel('Mean DIB')
+                    if 'loading' not in it:
+                        x1,x2,y1,y2 = plt.axis()
+                        plt.axis((x1,x2,0,40))
+                elif statistic == 'variance':
+                    ax.set_ylabel('Variance of DIB')
+                    if 'loading' not in it:
+                        x1,x2,y1,y2 = plt.axis()
+                        plt.axis((x1,x2,0,180))
+                elif statistic == 'standard_deviation':
+                    ax.set_ylabel('Standard deviation of DIB')
+                elif statistic == 'median':
+                    ax.set_ylabel('Median of DIB')
+                    if 'loading' not in it:
+                        x1,x2,y1,y2 = plt.axis()
+                        plt.axis((x1,x2,0,40))
+                elif statistic == 'perc95':
+                    ax.set_ylabel('95th percentile of DIB')
+                    if 'loading' not in it:
+                        x1,x2,y1,y2 = plt.axis()
+                        plt.axis((x1,x2,0,70))
+                #plt.title('%s of %s over %s' % (statistic, im, it))
+                plt.title('Test case: %s' % (it.strip('-')))
+                #plt.legend(lines, names, loc='upper left', prop={'size':12})
+                if not os.path.isdir('plots'):
+                    os.mkdir('plots')
+                #fig.set_size_inches(8, 6)
+                #fig.set_size_inches(8.9, 6.5)
+                fig.set_size_inches(5, 3.75)
+                ax.grid(True)
+
+                #from matplotlib import rcParams
+                #rcParams.update({'figure.autolayout': True})
+                fig.subplots_adjust(bottom=0.15, left=0.20)
+                #ax.legend().set_visible(False)
+
+                plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=72)
+                #fig.close()
+
+
 
 def plot_aggregates(aggregates):
     
@@ -208,7 +328,7 @@ def plot_aggregates(aggregates):
             print 'im', im
             #if im != 'probing_sequence_length_search': continue
             for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
-                fig = plt.figure((index_stat+1) * 1000 + (index_metric+1) * 100 + index_testcase + 1)
+                fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
                 ax = fig.add_subplot(111)
                 lines = []
                 names = []
@@ -258,7 +378,7 @@ def plot_aggregates(aggregates):
                     if 'probing' in ia:
                         style = '-'
                     elif 'robinhood' in ia:
-                        style = ':'
+                        style = '-'
                     else:
                         style = '--'
                     color = colors[index_testcase % len(colors)]
@@ -290,15 +410,18 @@ def plot_aggregates(aggregates):
                 plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.legend(lines, names, loc='upper left')
                 fig.set_size_inches(8, 6)
-                plt.savefig('%s_%s_%s.png' % (im, statistic, it), dpi=300)
+                if not os.path.isdir('plots'):
+                    os.mkdir('plots')
+                plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=300)
         #plt.show()
 
         #pprint.pprint(aggregates)
 
 if __name__=="__main__":
     shifts = ""
-    if len(sys.argv) == 4:
-        shifts = sys.argv[3]
-    agg = aggregate_datapoints(sys.argv[1], sys.argv[2], shifts)
-    plot_aggregates(agg)
+    if len(sys.argv) == 5:
+        shifts = sys.argv[4]
+    agg = aggregate_datapoints(sys.argv[1], sys.argv[2], sys.argv[3], shifts)
+    #plot_aggregates(agg)
+    plot_robinhood(agg)
     #pprint.pprint(agg)
