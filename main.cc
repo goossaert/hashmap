@@ -8,7 +8,8 @@
 
 #include "hashmap.h"
 #include "probing_hashmap.h"
-#include "robinhood_hashmap.h"
+#include "tombstone_hashmap.h"
+#include "backshift_hashmap.h"
 #include "bitmap_hashmap.h"
 #include "shadow_hashmap.h"
 
@@ -54,24 +55,28 @@ void show_usage() {
 
   fprintf(stdout, "General parameters (mandatory):\n");
   fprintf(stdout, " --algo            algorithm to use for the hash table. Possible values are:\n");
-  fprintf(stdout, "                     * linear: linear probing\n");
-  fprintf(stdout, "                     * robinhood: robin hood hashing\n");
+  fprintf(stdout, "                     * linear: basic linear probing\n");
+  fprintf(stdout, "                     * tombstone: Robin Hood hashing with tombstone deletion\n");
+  fprintf(stdout, "                     * backshift: Robin Hood hashing with backward shifting deletion\n");
   fprintf(stdout, "                     * bitmap: hopscotch hashing with bitmap representation\n");
   fprintf(stdout, "                     * shadow: hopscotch hashing with shadow representation\n");
   fprintf(stdout, " --testcase        test case to use. Possible values are:\n");
   fprintf(stdout, "                     * loading: load the table until it is full (does not perform any removals).\n");
   fprintf(stdout, "                     * batch: load the table, then remove a large batch, and re-insert a large batch.\n");
-  fprintf(stdout, "                     * ripple: load the table, then do a series of remove-insetion operations.\n");
+  fprintf(stdout, "                     * ripple: load the table, then do a series of removal-insertion operations.\n");
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for linear probing algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
   fprintf(stdout, "\n");
 
-  fprintf(stdout, "Parameters for Robin Hood algorithm (optional):\n");
+  fprintf(stdout, "Parameters for tombstone algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
   fprintf(stdout, "\n");
 
+  fprintf(stdout, "Parameters for backshift algorithm (optional):\n");
+  fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
+  fprintf(stdout, "\n");
 
   fprintf(stdout, "Parameters for bitmap algorithm (optional):\n");
   fprintf(stdout, " --num_buckets     number of buckets in the hash table (default=10000)\n");
@@ -160,8 +165,10 @@ int main(int argc, char **argv) {
     hm = new hashmap::ShadowHashMap(num_items, size_probing, size_neighborhood_start, size_neighborhood_end);
   } else if (algorithm == "linear") {
     hm = new hashmap::ProbingHashMap(num_items, size_probing);
-  } else if (algorithm == "robinhood") {
-    hm = new hashmap::RobinHoodHashMap(num_items);
+  } else if (algorithm == "tombstone") {
+    hm = new hashmap::TombstoneHashMap(num_items);
+  } else if (algorithm == "backshift") {
+    hm = new hashmap::BackshiftHashMap(num_items);
   } else {
     fprintf(stderr, "Unknown algorithm [%s]\n", algorithm.c_str());
     exit(-1); 

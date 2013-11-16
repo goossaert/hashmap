@@ -1,5 +1,5 @@
-#ifndef HASHMAP_ROBINHOOD
-#define HASHMAP_ROBINHOOD
+#ifndef HASHMAP_BACKSHIFT
+#define HASHMAP_BACKSHIFT
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
@@ -22,18 +22,18 @@ namespace hashmap
 
 
 
-class RobinHoodHashMap: public HashMap
+class BackshiftHashMap: public HashMap
 {
 public:
 
-  RobinHoodHashMap(uint64_t size) {
+  BackshiftHashMap(uint64_t size) {
     buckets_ = NULL;
     num_buckets_ = size;
     probing_max_ = size;
     DELETED_BUCKET = (Entry*)1;
   }
 
-  virtual ~RobinHoodHashMap() {
+  virtual ~BackshiftHashMap() {
     Close();
   }
 
@@ -97,4 +97,4 @@ private:
 
 }; // end namespace hashmap
 
-#endif // HASHMAP_PROBING
+#endif // HASHMAP_BACKSHIFT

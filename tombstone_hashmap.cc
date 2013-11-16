@@ -1,10 +1,10 @@
-#include "robinhood_hashmap.h"
+#include "tombstone_hashmap.h"
 
 namespace hashmap {
 
 
 
-int RobinHoodHashMap::Open() {
+int TombstoneHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
   monitoring_ = new hashmap::Monitoring(num_buckets_, num_buckets_, static_cast<HashMap*>(this));
@@ -14,7 +14,7 @@ int RobinHoodHashMap::Open() {
   return 0;
 }
 
-int RobinHoodHashMap::Close() {
+int TombstoneHashMap::Close() {
   if (buckets_ != NULL) {
     for (uint32_t i = 0; i < num_buckets_; i++) {
       if (buckets_[i].entry != NULL && buckets_[i].entry != DELETED_BUCKET) {
@@ -35,7 +35,7 @@ int RobinHoodHashMap::Close() {
 
 
 
-int RobinHoodHashMap::Get(const std::string& key, std::string* value) {
+int TombstoneHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   uint64_t probe_distance = 0;
@@ -69,7 +69,7 @@ int RobinHoodHashMap::Get(const std::string& key, std::string* value) {
 
 
 
-int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
+int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
   if (num_buckets_used_ + 1 == num_buckets_) {
     return 1;
   }
@@ -82,7 +82,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
   memcpy(data, key.c_str(), key.size());
   memcpy(data + key.size(), value.c_str(), value.size());
 
-  RobinHoodHashMap::Entry *entry = new RobinHoodHashMap::Entry;
+  TombstoneHashMap::Entry *entry = new TombstoneHashMap::Entry;
   entry->size_key = key.size();
   entry->size_value = value.size();
   entry->data = data;
@@ -90,7 +90,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t index_current = index_init;
   uint64_t probe_distance = 0;
   uint64_t probe_current = GetMinInitDistance();
-  RobinHoodHashMap::Entry *entry_temp = NULL;
+  TombstoneHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = NULL;
   uint64_t i;
 
@@ -133,13 +133,13 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
 }
 
 
-int RobinHoodHashMap::Exists(const std::string& key) {
+int TombstoneHashMap::Exists(const std::string& key) {
   // TODO: implement
   return 0;
 }
 
 
-int RobinHoodHashMap::Remove(const std::string& key) {
+int TombstoneHashMap::Remove(const std::string& key) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   uint64_t probe_distance = 0;
@@ -192,27 +192,27 @@ int RobinHoodHashMap::Remove(const std::string& key) {
 
 
 
-int RobinHoodHashMap::Resize() {
+int TombstoneHashMap::Resize() {
   // TODO: implement
   return 0;
 }
 
 
 // For debugging
-int RobinHoodHashMap::CheckDensity() {
+int TombstoneHashMap::CheckDensity() {
   return 0;
 }
 
-int RobinHoodHashMap::BucketCounts() {
+int TombstoneHashMap::BucketCounts() {
   return 0;
 }
 
-int RobinHoodHashMap::Dump() {
+int TombstoneHashMap::Dump() {
   return 0;
 }
 
 
-int RobinHoodHashMap::GetBucketState(int index) {
+int TombstoneHashMap::GetBucketState(int index) {
   //printf("GetBucketState %d\n", index);
   if (buckets_[index].entry == NULL) {
     return 0;
@@ -221,13 +221,13 @@ int RobinHoodHashMap::GetBucketState(int index) {
   return 1;
 }
 
-int RobinHoodHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
+int TombstoneHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
   if(buckets_[index_stored].entry == NULL) return -1;
   *index_init = buckets_[index_stored].hash % num_buckets_;
   return 0;
 }
 
-int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance) {
+int TombstoneHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance) {
   if(buckets_[index_stored].entry == NULL) return -1;
   uint64_t index_init = buckets_[index_stored].hash % num_buckets_;
   if (index_init <= index_stored) {
@@ -239,8 +239,8 @@ int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 }
 
 
-void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
-  metadata["name"] = "robinhood";
+void TombstoneHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
+  metadata["name"] = "tombstone";
   char buffer[1024]; 
   sprintf(buffer, "{\"num_buckets\": %llu, \"probing_max\": %llu}", num_buckets_, probing_max_);
   metadata["parameters_hashmap"] = buffer;
@@ -248,17 +248,17 @@ void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadat
   metadata["parameters_hashmap_string"] = buffer;
 }
 
-uint64_t RobinHoodHashMap::GetMinInitDistance() {
+uint64_t TombstoneHashMap::GetMinInitDistance() {
   return init_distance_min_;
 }
 
-uint64_t RobinHoodHashMap::GetMaxInitDistance() {
+uint64_t TombstoneHashMap::GetMaxInitDistance() {
   return init_distance_max_;
 }
 
 
 
-void RobinHoodHashMap::UpdateMinMaxInitDistance() {
+void TombstoneHashMap::UpdateMinMaxInitDistance() {
   init_distance_min_ = 0;
   init_distance_max_ = 0;
   if (distances_.size() == 0) return;
@@ -283,7 +283,7 @@ void RobinHoodHashMap::UpdateMinMaxInitDistance() {
 }
 
 
-void RobinHoodHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
+void TombstoneHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
   std::map<uint64_t, uint64_t>::iterator it;
   it = distances_.find(distance);
   if (it == distances_.end()) {

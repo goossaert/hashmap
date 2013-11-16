@@ -1,10 +1,10 @@
-#include "robinhood_hashmap.h"
+#include "backshift_hashmap.h"
 
 namespace hashmap {
 
 
 
-int RobinHoodHashMap::Open() {
+int BackshiftHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
   monitoring_ = new hashmap::Monitoring(num_buckets_, num_buckets_, static_cast<HashMap*>(this));
@@ -14,7 +14,7 @@ int RobinHoodHashMap::Open() {
   return 0;
 }
 
-int RobinHoodHashMap::Close() {
+int BackshiftHashMap::Close() {
   if (buckets_ != NULL) {
     for (uint32_t i = 0; i < num_buckets_; i++) {
       if (buckets_[i].entry != NULL && buckets_[i].entry != DELETED_BUCKET) {
@@ -35,7 +35,7 @@ int RobinHoodHashMap::Close() {
 
 
 
-int RobinHoodHashMap::Get(const std::string& key, std::string* value) {
+int BackshiftHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   uint64_t probe_distance = 0;
@@ -69,7 +69,7 @@ int RobinHoodHashMap::Get(const std::string& key, std::string* value) {
 
 
 
-int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
+int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
   if (num_buckets_used_ + 1 == num_buckets_) {
     return 1;
   }
@@ -82,7 +82,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
   memcpy(data, key.c_str(), key.size());
   memcpy(data + key.size(), value.c_str(), value.size());
 
-  RobinHoodHashMap::Entry *entry = new RobinHoodHashMap::Entry;
+  BackshiftHashMap::Entry *entry = new BackshiftHashMap::Entry;
   entry->size_key = key.size();
   entry->size_value = value.size();
   entry->data = data;
@@ -90,7 +90,7 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t index_current = index_init;
   uint64_t probe_distance = 0;
   uint64_t probe_current = GetMinInitDistance();
-  RobinHoodHashMap::Entry *entry_temp = NULL;
+  BackshiftHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = NULL;
   uint64_t i;
 
@@ -133,13 +133,13 @@ int RobinHoodHashMap::Put(const std::string& key, const std::string& value) {
 }
 
 
-int RobinHoodHashMap::Exists(const std::string& key) {
+int BackshiftHashMap::Exists(const std::string& key) {
   // TODO: implement
   return 0;
 }
 
 
-int RobinHoodHashMap::Remove(const std::string& key) {
+int BackshiftHashMap::Remove(const std::string& key) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   uint64_t probe_distance = 0;
@@ -173,22 +173,6 @@ int RobinHoodHashMap::Remove(const std::string& key) {
     }
   }
 
-
-  /*
-  if (found) {
-    FillDistanceToInitIndex(index_current, &probe_distance);
-    UpdateInitDistance(probe_distance, -1);
-
-    delete[] buckets_[index_current].entry->data;
-    delete buckets_[index_current].entry;
-    buckets_[index_current].entry = DELETED_BUCKET;
-    monitoring_->UpdateNumItemsInBucket(index_init, -1);
-    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
-    num_buckets_used_ -= 1;
-
-    return 0;
-  }
-  */
   if (found) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
@@ -224,27 +208,27 @@ int RobinHoodHashMap::Remove(const std::string& key) {
 
 
 
-int RobinHoodHashMap::Resize() {
+int BackshiftHashMap::Resize() {
   // TODO: implement
   return 0;
 }
 
 
 // For debugging
-int RobinHoodHashMap::CheckDensity() {
+int BackshiftHashMap::CheckDensity() {
   return 0;
 }
 
-int RobinHoodHashMap::BucketCounts() {
+int BackshiftHashMap::BucketCounts() {
   return 0;
 }
 
-int RobinHoodHashMap::Dump() {
+int BackshiftHashMap::Dump() {
   return 0;
 }
 
 
-int RobinHoodHashMap::GetBucketState(int index) {
+int BackshiftHashMap::GetBucketState(int index) {
   //printf("GetBucketState %d\n", index);
   if (buckets_[index].entry == NULL) {
     return 0;
@@ -253,13 +237,13 @@ int RobinHoodHashMap::GetBucketState(int index) {
   return 1;
 }
 
-int RobinHoodHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
+int BackshiftHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
   if(buckets_[index_stored].entry == NULL) return -1;
   *index_init = buckets_[index_stored].hash % num_buckets_;
   return 0;
 }
 
-int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance) {
+int BackshiftHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *distance) {
   if(buckets_[index_stored].entry == NULL) return -1;
   uint64_t index_init = buckets_[index_stored].hash % num_buckets_;
   if (index_init <= index_stored) {
@@ -271,8 +255,8 @@ int RobinHoodHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 }
 
 
-void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
-  metadata["name"] = "robinhoodshift";
+void BackshiftHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
+  metadata["name"] = "backshift";
   char buffer[1024]; 
   sprintf(buffer, "{\"num_buckets\": %llu, \"probing_max\": %llu}", num_buckets_, probing_max_);
   metadata["parameters_hashmap"] = buffer;
@@ -280,18 +264,18 @@ void RobinHoodHashMap::GetMetadata(std::map< std::string, std::string >& metadat
   metadata["parameters_hashmap_string"] = buffer;
 }
 
-uint64_t RobinHoodHashMap::GetMinInitDistance() {
+uint64_t BackshiftHashMap::GetMinInitDistance() {
   return 0;
   //return init_distance_min_;
 }
 
-uint64_t RobinHoodHashMap::GetMaxInitDistance() {
+uint64_t BackshiftHashMap::GetMaxInitDistance() {
   return init_distance_max_;
 }
 
 
 
-void RobinHoodHashMap::UpdateMinMaxInitDistance() {
+void BackshiftHashMap::UpdateMinMaxInitDistance() {
   init_distance_min_ = 0;
   init_distance_max_ = 0;
   if (distances_.size() == 0) return;
@@ -316,7 +300,7 @@ void RobinHoodHashMap::UpdateMinMaxInitDistance() {
 }
 
 
-void RobinHoodHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
+void BackshiftHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
   std::map<uint64_t, uint64_t>::iterator it;
   it = distances_.find(distance);
   if (it == distances_.end()) {
