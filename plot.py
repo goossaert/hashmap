@@ -194,7 +194,7 @@ def randomized_paired_sample_t_test(reference, candidate, details):
 
 def plot_robinhood(aggregates):
 
-    colors = {'red': '#cd7058', 'blue': '#599ad3'}
+    colors = {'red': '#cd7058', 'blue': '#599ad3', 'orange': '#f9a65a'}
 
     font = {'family' : 'normal',
             'weight' : 'normal',
@@ -214,10 +214,10 @@ def plot_robinhood(aggregates):
                 names = []
 
                 for ia in sorted(aggregates[im][it].keys()):
-                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000', '100000']]) \
-                      or not any(algo in ia for algo in ['probing', 'robinhood']):
-                        v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000', '100000']])
-                        v2 = any(algo in ia for algo in ['probing', 'robinhood'])
+                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]) \
+                      or not any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift']):
+                        v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
+                        v2 = any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift'])
                         print "skip [%s] - %s %s" % (ia, v1, v2)
                         continue
 
@@ -233,12 +233,16 @@ def plot_robinhood(aggregates):
 
                     if 'probing' in ia:
                         color = colors['blue']
-                    else:
+                    elif 'robinhoodshift' in ia:
+                        color = colors['orange']
+                    else: # robinhood
                         color = colors['red']
                     #names.append('%s-%s' % (ia, it))
                     name = ''
-                    if 'robinhood' in ia:
-                        name = 'Robin Hood'
+                    if 'robinhoodshift' in ia:
+                        name = 'Robin Hood (backward shift)'
+                    elif 'robinhood' in ia:
+                        name = 'Robin Hood (tombstone)'
                     elif 'probing' in ia:
                         name = 'Linear probing'
                     else:
@@ -288,7 +292,7 @@ def plot_robinhood(aggregates):
                         plt.axis((x1,x2,0,70))
                 #plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.title('Test case: %s' % (it.strip('-')))
-                #plt.legend(lines, names, loc='upper left', prop={'size':12})
+                plt.legend(lines, names, loc='upper left', prop={'size':12})
                 if not os.path.isdir('plots'):
                     os.mkdir('plots')
                 #fig.set_size_inches(8, 6)
