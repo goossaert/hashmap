@@ -101,8 +101,8 @@ void show_usage() {
   fprintf(stdout, "\n");
 
   fprintf(stdout, "Examples:\n");
-  fprintf(stdout, "./hashmap --algo bitmap --num_buckets 1000000\n");
-  fprintf(stdout, "./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64\n");
+  fprintf(stdout, "./hashmap --algo backshift --num_buckets 10000 --testcase batch --load_factor_max 0.8 --load_factor_step 0.1\n");
+  fprintf(stdout, "./hashmap --algo shadow --num_buckets 10000 --size_nh_start 4 --size_nh_end 64 --testcase loading\n");
 }
 
 
