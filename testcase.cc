@@ -126,6 +126,7 @@ void BatchTestCase::run() {
 
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
+      bool has_error_on_put = false;
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
@@ -146,9 +147,13 @@ void BatchTestCase::run() {
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
+          // break on error
+          has_error_on_put = true;
+          break;
         }
       }
       printf("keys insert %zu\n", keys.size());
+      if (has_error_on_put) break;
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);
@@ -274,6 +279,7 @@ void RippleTestCase::run() {
 
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
+      bool has_error_on_put = false;
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
@@ -294,6 +300,9 @@ void RippleTestCase::run() {
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
+          // break on error
+          has_error_on_put = true;
+          break;
         }
 
         if (cycle > 0) {
@@ -311,6 +320,7 @@ void RippleTestCase::run() {
         }
       }
       printf("keys insert %zu\n", keys.size());
+      if (has_error_on_put) break;
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);
@@ -419,6 +429,7 @@ void LoadingTestCase::run() {
 
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
+      bool has_error_on_put = false;
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
         while (!is_valid) {
@@ -439,9 +450,13 @@ void LoadingTestCase::run() {
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
+          // break on error
+          has_error_on_put = true;
+          break;
         }
       }
       printf("keys insert %zu\n", keys.size());
+      if (has_error_on_put) break;
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);

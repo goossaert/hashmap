@@ -202,7 +202,7 @@ def plot_robinhood(aggregates):
     matplotlib.rc('font', **font)
 
 
-    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'standard_deviation', 'variance']):
+    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance']):
         for index_metric, im in enumerate(aggregates.keys()):
             if  'probing_sequence_length_search' not in im:
                 continue 
@@ -214,8 +214,8 @@ def plot_robinhood(aggregates):
                 names = []
 
                 for ia in sorted(aggregates[im][it].keys()):
-                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]) \
-                      or not any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift']):
+                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
+                      #or not any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift']):
                         v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
                         v2 = any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift'])
                         print "skip [%s] - %s %s" % (ia, v1, v2)
@@ -235,8 +235,12 @@ def plot_robinhood(aggregates):
                         color = colors['blue']
                     elif 'robinhoodshift' in ia:
                         color = colors['orange']
-                    else: # robinhood
+                    elif 'robinhood' in ia:
                         color = colors['red']
+                    elif 'shadow' in ia:
+                        color = '#000000'
+                    elif 'bitmap' in ia:
+                        color = '#a3a3a3'
                     #names.append('%s-%s' % (ia, it))
                     name = ''
                     if 'robinhoodshift' in ia:
