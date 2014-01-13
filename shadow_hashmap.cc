@@ -39,6 +39,7 @@ int ShadowHashMap::Get(const std::string& key, std::string* value) {
   for (uint32_t i = 0; i < size_neighborhood_; i++) {
     uint64_t index_current = (index_init + i) % num_buckets_;
     if (   buckets_[index_current].entry != NULL
+        && buckets_[index_current].hash  == hash
         && key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       *value = std::string(buckets_[index_current].entry->data + key.size(),
@@ -143,11 +144,10 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
 }
 
 int ShadowHashMap::Put(const std::string& key, const std::string& value) {
-
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   uint64_t index_empty = FindEmptyBucket(index_init);
-
+  // TODO: Put() should use Exists() and perform a replacement if needed.
   if (index_empty == num_buckets_) {
     return 1; 
   }
@@ -181,6 +181,7 @@ int ShadowHashMap::Remove(const std::string& key) {
   for (uint32_t i = 0; i < size_neighborhood_; i++) {
     index_current = (index_init + i) % num_buckets_;
     if (   buckets_[index_current].entry != NULL
+        && buckets_[index_current].hash  == hash
         && key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       found = true;
