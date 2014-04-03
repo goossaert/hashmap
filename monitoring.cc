@@ -109,7 +109,7 @@ void Monitoring::PrintClustering(HashMap *hm) {
   for (int i = 0; i < 5; i++) {
     fprintf(stdout, "Cluster for window of size %d:\n", sizes_window[i]);
     for (int j = 0; j < sizes_window[i] + 1; j++) {
-      fprintf(stdout, "    %5d: %5llu\n", j, clustering[i][j]);
+      fprintf(stdout, "    %5d: %5lu\n", j, clustering[i][j]);
     }
   }
 
