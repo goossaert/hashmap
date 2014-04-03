@@ -149,7 +149,7 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
   }
   buckets_[index_init].bitmap |= mask; 
 
-  //fprintf(stderr, "Put() [%s] %llu %llu\n", key.c_str(), index_init, index_empty);
+  //fprintf(stderr, "Put() [%s] %lu %lu\n", key.c_str(), index_init, index_empty);
 
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
@@ -182,7 +182,7 @@ int BitmapHashMap::Remove(const std::string& key) {
   }
 
   if (found) {
-    //fprintf(stderr, "Remove() [%s] %llu %llu\n", key.c_str(), index_init, index_current);
+    //fprintf(stderr, "Remove() [%s] %lu %lu\n", key.c_str(), index_init, index_current);
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
@@ -318,9 +318,9 @@ int BitmapHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
 void BitmapHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "bitmap";
   char buffer[1024]; 
-  sprintf(buffer, "{\"num_buckets\": %llu, \"size_probing\": %u}", num_buckets_, size_probing_);
+  sprintf(buffer, "{\"num_buckets\": %lu, \"size_probing\": %u}", num_buckets_, size_probing_);
   metadata["parameters_hashmap"] = buffer;
-  sprintf(buffer, "nb%llu-sp%u", num_buckets_, size_probing_);
+  sprintf(buffer, "nb%lu-sp%u", num_buckets_, size_probing_);
   metadata["parameters_hashmap_string"] = buffer;
 }
 
