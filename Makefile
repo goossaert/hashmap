@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS=-c -Wall -g -pg
-LDFLAGS=-g -pg
+CFLAGS=-O3 -c -Wall -g
+LDFLAGS=-g
 SOURCES=bitmap_hashmap.cc shadow_hashmap.cc probing_hashmap.cc tombstone_hashmap.cc backshift_hashmap.cc testcase.cc monitoring.cc murmurhash3.cc hamming.cc
 SOURCES_MAIN=main.cc
 OBJECTS=$(SOURCES:.cc=.o)
