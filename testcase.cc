@@ -58,7 +58,7 @@ void TestCase::RemoveEntries(uint32_t num_items, std::set<std::string>& keys) {
   for (uint32_t index_del = 0; index_del < num_items; index_del++) {
     uint64_t r = rand();
     uint64_t offset = r % keys.size();
-    //printf("delete index %d -- offset %lu -- rand %lu\n", index_del, offset, r);
+    //printf("delete index %d -- offset %" PRIu64 " -- rand %" PRIu64 "\n", index_del, offset, r);
     std::set<std::string>::iterator it(keys.begin());
     std::advance(it, offset);
     //fprintf(stdout, "str: %s\n", (*it).c_str());
@@ -205,7 +205,7 @@ void BatchTestCase::run() {
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
         uint64_t offset = r % keys.size();
-        //printf("delete index %d -- offset %lu -- rand %lu\n", index_del, offset, r);
+        //printf("delete index %d -- offset %" PRIu64 " -- rand %" PRIu64 "\n", index_del, offset, r);
         std::set<std::string>::iterator it(keys.begin());
         std::advance(it, offset);
         //fprintf(stdout, "str: %s\n", (*it).c_str());
@@ -308,7 +308,7 @@ void RippleTestCase::run() {
         if (cycle > 0) {
           uint64_t r = rand();
           uint64_t offset = r % keys.size();
-          //printf("delete index %d -- offset %lu -- rand %lu\n", index_del, offset, r);
+          //printf("delete index %d -- offset %" PRIu64 " -- rand %" PRIu64 "\n", index_del, offset, r);
           std::set<std::string>::iterator it(keys.begin());
           std::advance(it, offset);
           //fprintf(stdout, "str: %s\n", (*it).c_str());

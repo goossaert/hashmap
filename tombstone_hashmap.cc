@@ -165,7 +165,7 @@ int TombstoneHashMap::Remove(const std::string& key) {
       found = true;
       uint64_t mind = GetMinInitDistance();
       if (i < mind) {
-        fprintf(stderr, "Found at distance %lu and min at %lu\n", i, GetMinInitDistance());
+        fprintf(stderr, "Found at distance %" PRIu64 " and min at %" PRIu64 "\n", i, GetMinInitDistance());
       }
       break;
     }
@@ -240,9 +240,9 @@ int TombstoneHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 void TombstoneHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "tombstone";
   char buffer[1024]; 
-  sprintf(buffer, "{\"num_buckets\": %lu, \"probing_max\": %lu}", num_buckets_, probing_max_);
+  sprintf(buffer, "{\"num_buckets\": %" PRIu64 ", \"probing_max\": %" PRIu64 "}", num_buckets_, probing_max_);
   metadata["parameters_hashmap"] = buffer;
-  sprintf(buffer, "nb%lu-pm%lu", num_buckets_, probing_max_);
+  sprintf(buffer, "nb%" PRIu64 "-pm%" PRIu64 "", num_buckets_, probing_max_);
   metadata["parameters_hashmap_string"] = buffer;
 }
 
@@ -267,7 +267,7 @@ void TombstoneHashMap::UpdateMinMaxInitDistance() {
   init_distance_min_ = std::numeric_limits<uint64_t>::max();
   init_distance_max_ = 0;
   for (it = distances_.begin(); it != distances_.end(); ++it) {
-    //fprintf(stderr, "GetMinInitDistance() %lu %lu\n", it->first, it->second);
+    //fprintf(stderr, "GetMinInitDistance() %" PRIu64 " %" PRIu64 "\n", it->first, it->second);
     if (it->first < init_distance_min_) {
       init_distance_min_ = it->first;
     }
@@ -277,7 +277,7 @@ void TombstoneHashMap::UpdateMinMaxInitDistance() {
     }
   }
 
-  //fprintf(stderr, "GetMaxInitDistance() %lu\n", distances_max);
+  //fprintf(stderr, "GetMaxInitDistance() %" PRIu64 "\n", distances_max);
 }
 
 
@@ -289,7 +289,7 @@ void TombstoneHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) 
       distances_[distance] = increment;
       UpdateMinMaxInitDistance();
     } else {
-      fprintf(stderr, "UpdateInitDistance() neg on not exist %lu %d\n", distance, increment);
+      fprintf(stderr, "UpdateInitDistance() neg on not exist %" PRIu64 " %d\n", distance, increment);
     }
   } else {
     distances_[distance] += increment;
