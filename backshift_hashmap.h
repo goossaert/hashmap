@@ -31,7 +31,6 @@ public:
     buckets_ = NULL;
     num_buckets_ = size;
     probing_max_ = size;
-    DELETED_BUCKET = (Entry*)1;
   }
 
   virtual ~BackshiftHashMap() {
@@ -82,7 +81,6 @@ private:
     return output;
   }
 
-  Entry* DELETED_BUCKET;
   uint64_t probing_max_;
 
   void UpdateInitDistance(uint64_t distance, int32_t increment);

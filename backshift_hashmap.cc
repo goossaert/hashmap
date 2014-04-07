@@ -15,7 +15,7 @@ int BackshiftHashMap::Open() {
 int BackshiftHashMap::Close() {
   if (buckets_ != NULL) {
     for (uint32_t i = 0; i < num_buckets_; i++) {
-      if (buckets_[i].entry != NULL && buckets_[i].entry != DELETED_BUCKET) {
+      if (buckets_[i].entry != NULL) {
         delete[] buckets_[i].entry->data;
         delete buckets_[i].entry;
       }
@@ -44,10 +44,6 @@ int BackshiftHashMap::Get(const std::string& key, std::string* value) {
     if (   buckets_[index_current].entry == NULL
         || i > probe_distance) {
       break;
-    }
-
-    if (buckets_[index_current].entry == DELETED_BUCKET) {
-      continue;
     }
 
     if (   key.size() == buckets_[index_current].entry->size_key
@@ -112,14 +108,7 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
         hash = hash_temp;
         monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
         //UpdateInitDistance(probe_current, 1);
-        if (entry != DELETED_BUCKET) {
-          //UpdateInitDistance(probe_distance, -1);
-          probe_current = probe_distance;
-        } else {
-          // The bucket we just swapped was a deleted bucket,
-          // so the insertion process can stop here
-          break;
-        }
+        probe_current = probe_distance;
       }
     }
     probe_current++;
@@ -148,10 +137,6 @@ int BackshiftHashMap::Remove(const std::string& key) {
   for (uint64_t i = 0; i < num_buckets_; i++) {
   //for (uint64_t i = GetMinInitDistance(); i <= distance_max; i++) {
     index_current = (index_init + i) % num_buckets_;
-
-    if (buckets_[index_current].entry == DELETED_BUCKET) {
-      continue;
-    }
 
     FillDistanceToInitIndex(index_current, &probe_distance);
     if (   buckets_[index_current].entry == NULL) {
