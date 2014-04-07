@@ -13,8 +13,8 @@ void Monitoring::PrintInfo(FILE* fd, std::string metric) {
   fprintf(fd, " \"parameters_testcase_string\": \"%s\",\n", parameters_testcase_string_.c_str());
   fprintf(fd, " \"parameters_hashmap\": %s,\n", metadata["parameters_hashmap"].c_str());
   fprintf(fd, " \"parameters_hashmap_string\": \"%s\",\n", metadata["parameters_hashmap_string"].c_str());
-  fprintf(fd, " \"instance\": %llu,\n", instance_);
-  fprintf(fd, " \"cycle\": %llu,\n", cycle_);
+  fprintf(fd, " \"instance\": %lu,\n", instance_);
+  fprintf(fd, " \"cycle\": %lu,\n", cycle_);
 }
 
 uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
@@ -25,7 +25,7 @@ uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
     if(increment > 0) {
       num_items_in_bucket_[index] = 0;
     } else {
-      //fprintf(stderr, "UpdateNumItemsInBucket %llu %d -- return 0\n", index, increment);
+      //fprintf(stderr, "UpdateNumItemsInBucket %lu %d -- return 0\n", index, increment);
       return 0; 
     }
   }
@@ -109,7 +109,7 @@ void Monitoring::PrintClustering(HashMap *hm) {
   for (int i = 0; i < 5; i++) {
     fprintf(stdout, "Cluster for window of size %d:\n", sizes_window[i]);
     for (int j = 0; j < sizes_window[i] + 1; j++) {
-      fprintf(stdout, "    %5d: %5llu\n", j, clustering[i][j]);
+      fprintf(stdout, "    %5d: %5lu\n", j, clustering[i][j]);
     }
   }
 
@@ -148,13 +148,13 @@ void Monitoring::PrintDensity(std::string filepath) {
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {");
 
-  //fprintf(fd, "      \"0\": %llu", num_buckets_ - count_total);
+  //fprintf(fd, "      \"0\": %lu", num_buckets_ - count_total);
   bool first_item = true;
   for (it = density_.begin(); it != density_.end(); ++it) {
     if (!first_item) fprintf(fd, ",");
     first_item = false;
     fprintf(fd, "\n");
-    fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
+    fprintf(fd, "      \"%lu\": %lu", it->first, it->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -178,7 +178,7 @@ uint64_t Monitoring::GetProbingSequenceLengthSearch(uint64_t index) {
 
 void Monitoring::SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl) {
   psl_search_[index] = psl;
-  //fprintf(stderr, "SetPSL [%llu]\n", index);
+  //fprintf(stderr, "SetPSL [%lu]\n", index);
 }
 
 void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
@@ -187,7 +187,7 @@ void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
   if (it != psl_search_.end()) {
     psl_search_.erase(it);
   } else {
-    //fprintf(stderr, "RemovePSL error: cannot find index [%llu]\n", index); 
+    //fprintf(stderr, "RemovePSL error: cannot find index [%lu]\n", index); 
   }
 
 }
@@ -226,7 +226,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
-    fprintf(fd, "     \"%llu\": %llu", it_count->first, it_count->second);
+    fprintf(fd, "     \"%lu\": %lu", it_count->first, it_count->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -296,7 +296,7 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
       if (!first_item) fprintf(fd, ",");
       first_item = false;
       fprintf(fd, "\n");
-      fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
+      fprintf(fd, "      \"%lu\": %lu", it->first, it->second);
     }
     fprintf(fd, "\n");
     fprintf(fd, "    }\n");
@@ -349,7 +349,7 @@ void Monitoring::PrintNumSecondaryAccesses(std::string filepath) {
     if (!first_item) fprintf(fd, ",");
     first_item = false;
     fprintf(fd, "\n");
-    fprintf(fd, "      \"%llu\": %llu", it->first, it->second);
+    fprintf(fd, "      \"%lu\": %lu", it->first, it->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");

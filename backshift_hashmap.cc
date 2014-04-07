@@ -2,8 +2,6 @@
 
 namespace hashmap {
 
-
-
 int BackshiftHashMap::Open() {
   buckets_ = new Bucket[num_buckets_];
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
@@ -91,7 +89,7 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t probe_distance = 0;
   uint64_t probe_current = GetMinInitDistance();
   BackshiftHashMap::Entry *entry_temp = NULL;
-  uint64_t hash_temp = NULL;
+  uint64_t hash_temp = 0;
   uint64_t i;
 
   for (i = probe_current; i < probing_max_; i++) {
@@ -167,7 +165,7 @@ int BackshiftHashMap::Remove(const std::string& key) {
       found = true;
       uint64_t mind = GetMinInitDistance();
       if (i < mind) {
-        fprintf(stderr, "Found at distance %llu and min at %llu\n", i, GetMinInitDistance());
+        fprintf(stderr, "Found at distance %lu and min at %lu\n", i, GetMinInitDistance());
       }
       break;
     }
@@ -258,9 +256,9 @@ int BackshiftHashMap::FillDistanceToInitIndex(uint64_t index_stored, uint64_t *d
 void BackshiftHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "backshift";
   char buffer[1024]; 
-  sprintf(buffer, "{\"num_buckets\": %llu, \"probing_max\": %llu}", num_buckets_, probing_max_);
+  sprintf(buffer, "{\"num_buckets\": %lu, \"probing_max\": %lu}", num_buckets_, probing_max_);
   metadata["parameters_hashmap"] = buffer;
-  sprintf(buffer, "nb%llu-pm%llu", num_buckets_, probing_max_);
+  sprintf(buffer, "nb%lu-pm%lu", num_buckets_, probing_max_);
   metadata["parameters_hashmap_string"] = buffer;
 }
 
@@ -286,7 +284,7 @@ void BackshiftHashMap::UpdateMinMaxInitDistance() {
   init_distance_min_ = std::numeric_limits<uint64_t>::max();
   init_distance_max_ = 0;
   for (it = distances_.begin(); it != distances_.end(); ++it) {
-    //fprintf(stderr, "GetMinInitDistance() %llu %llu\n", it->first, it->second);
+    //fprintf(stderr, "GetMinInitDistance() %lu %lu\n", it->first, it->second);
     if (it->first < init_distance_min_) {
       init_distance_min_ = it->first;
     }
@@ -296,7 +294,7 @@ void BackshiftHashMap::UpdateMinMaxInitDistance() {
     }
   }
 
-  //fprintf(stderr, "GetMaxInitDistance() %llu\n", distances_max);
+  //fprintf(stderr, "GetMaxInitDistance() %lu\n", distances_max);
 }
 
 
@@ -308,7 +306,7 @@ void BackshiftHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) 
       distances_[distance] = increment;
       UpdateMinMaxInitDistance();
     } else {
-      fprintf(stderr, "UpdateInitDistance() neg on not exist %llu %d\n", distance, increment);
+      fprintf(stderr, "UpdateInitDistance() neg on not exist %lu %d\n", distance, increment);
     }
   } else {
     distances_[distance] += increment;
@@ -318,8 +316,5 @@ void BackshiftHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) 
     }
   }
 }
-
-
-
 
 }; // end namespace hashmap

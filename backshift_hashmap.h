@@ -10,6 +10,7 @@
 
 #include <string>
 #include <iostream>
+#include <limits>
 
 #include "murmurhash3.h"
 #include "hamming.h"

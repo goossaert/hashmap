@@ -105,7 +105,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
       } else {
         // For debugging only, dump of the area around the neighborhood
         if (false) {
-          //fprintf(stderr, "index [%llu] empty [%llu]\n", index_init, index_empty);
+          //fprintf(stderr, "index [%lu] empty [%lu]\n", index_init, index_empty);
           uint32_t index_temp = index_empty - size_neighborhood_ + 1;
           if (index_temp > index_init) index_temp = index_init;
           index_temp -= 20;
@@ -243,9 +243,9 @@ int ShadowHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
 void ShadowHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "shadow";
   char buffer[1024]; 
-  sprintf(buffer, "{\"num_buckets\": %llu, \"size_probing\": %u, \"size_neighborhood_start\": %u, \"size_neighborhood_end\": %u}", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
+  sprintf(buffer, "{\"num_buckets\": %lu, \"size_probing\": %u, \"size_neighborhood_start\": %u, \"size_neighborhood_end\": %u}", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
   metadata["parameters_hashmap"] = buffer;
-  sprintf(buffer, "nb%llu-sp%u-sns%u-sne%u", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
+  sprintf(buffer, "nb%lu-sp%u-sns%u-sne%u", num_buckets_, size_probing_, size_neighborhood_start_, size_neighborhood_max_);
   metadata["parameters_hashmap_string"] = buffer;
 }
 

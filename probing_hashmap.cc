@@ -145,7 +145,7 @@ int ProbingHashMap::Remove(const std::string& key) {
     //fprintf(stderr, "Remove() OK\n");
     return 0;
   } else {
-    //fprintf(stderr, "Remove() not found - %llu %p\n", buckets_[index_current].hash, buckets_[index_current].entry);
+    //fprintf(stderr, "Remove() not found - %lu %p\n", buckets_[index_current].hash, buckets_[index_current].entry);
   }
 
   return 1;
@@ -191,9 +191,9 @@ int ProbingHashMap::FillInitIndex(uint64_t index_stored, uint64_t *index_init) {
 void ProbingHashMap::GetMetadata(std::map< std::string, std::string >& metadata) {
   metadata["name"] = "probing";
   char buffer[1024]; 
-  sprintf(buffer, "{\"num_buckets\": %llu, \"probing_max\": %u}", num_buckets_, probing_max_);
+  sprintf(buffer, "{\"num_buckets\": %lu, \"probing_max\": %u}", num_buckets_, probing_max_);
   metadata["parameters_hashmap"] = buffer;
-  sprintf(buffer, "nb%llu-pm%u", num_buckets_, probing_max_);
+  sprintf(buffer, "nb%lu-pm%u", num_buckets_, probing_max_);
   metadata["parameters_hashmap_string"] = buffer;
 }
 
