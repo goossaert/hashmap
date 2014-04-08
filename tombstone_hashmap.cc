@@ -68,7 +68,7 @@ int TombstoneHashMap::Get(const std::string& key, std::string* value) {
 
 
 int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
-  if (num_buckets_used_ + 1 == num_buckets_) {
+  if (num_buckets_used_ == num_buckets_) {
     return 1;
   }
   num_buckets_used_ += 1;
