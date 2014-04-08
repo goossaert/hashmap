@@ -64,6 +64,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
       found = true;
+      monitoring_->AddDistanceToFreeBucket(i);
       break;
     }
   }

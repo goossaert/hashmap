@@ -125,6 +125,7 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
     probe_current++;
   }
 
+  monitoring_->AddDistanceToFreeBucket(i);
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;

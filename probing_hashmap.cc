@@ -69,6 +69,7 @@ uint64_t ProbingHashMap::FindEmptyBucket(uint64_t index_init) {
         || buckets_[index_current % num_buckets_].entry == DELETED_BUCKET) {
       found = true;
       monitoring_->SetProbingSequenceLengthSearch(index_current % num_buckets_, i);
+      monitoring_->AddDistanceToFreeBucket(i);
       break;
     }
   }

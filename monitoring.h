@@ -53,6 +53,12 @@ public:
   void RemoveProbingSequenceLengthSearch(uint64_t index);
   void PrintProbingSequenceLengthSearch(std::string filepath);
 
+
+  void AddDistanceToFreeBucket(uint64_t distance);
+  void ResetDistanceToFreeBucket();
+  void PrintDistanceToFreeBucket(std::string filepath);
+
+
   void GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
   void GetNumSecondaryAccesses(std::map<uint64_t, uint64_t>& out_num_secondary_accesses);
@@ -81,6 +87,7 @@ private:
   uint64_t size_bucket_;
   std::map<uint64_t, uint64_t> density_;
   std::map<uint64_t, uint64_t> psl_search_;
+  std::map<uint64_t, uint64_t> psl_insert_;
   HashMap *hm_;
   uint64_t cycle_;
   uint64_t instance_;

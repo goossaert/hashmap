@@ -65,6 +65,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     index_current = index_init + i;
     if (buckets_[index_current % num_buckets_].entry == NULL) {
       found = true;
+      monitoring_->AddDistanceToFreeBucket(i);
       break;
     }
   }

@@ -363,4 +363,55 @@ void Monitoring::PrintNumSecondaryAccesses(std::string filepath) {
 
 
 
+
+void Monitoring::AddDistanceToFreeBucket(uint64_t distance) {
+                                            
+  std::map<uint64_t, uint64_t>::iterator it;
+  it = psl_insert_.find(distance);
+  if (it == psl_insert_.end()) {
+      psl_insert_[distance] = 0;
+  }
+  psl_insert_[distance] += 1;
+}
+
+
+void Monitoring::ResetDistanceToFreeBucket() {
+  psl_insert_.clear();
+}
+
+
+void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
+  std::map<uint64_t, uint64_t>::iterator it;
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "distance_free_bucket");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {\n");
+
+  bool first_item = true;
+  for (it = psl_insert_.begin(); it != psl_insert_.end(); it++) {
+    if (!first_item) fprintf(fd, ",\n");
+    first_item = false;
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64 "", it->first, it->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
+
+  if (filepath != "stdout") {
+    fclose(fd);
+  }
+}
+
+
+
+
+
 }; // end namespace hashmap

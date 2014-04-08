@@ -1,7 +1,7 @@
 #include "testcase.h"
 
 
-// TODO: Factorize as much as possible accross the test cases.
+// TODO: Factorize as much as possible across the test cases.
 
 namespace hashmap
 {
@@ -196,12 +196,18 @@ void BatchTestCase::run() {
               cycle);
       hm_->monitoring_->PrintNumSecondaryAccesses(filename);
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetDistanceToFreeBucket();
 
-
-
-
-
-      
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
         uint64_t offset = r % keys.size();
@@ -363,6 +369,18 @@ void RippleTestCase::run() {
               cycle);
       hm_->monitoring_->PrintNumSecondaryAccesses(filename);
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetDistanceToFreeBucket();
+
 
       
 
@@ -512,6 +530,19 @@ void LoadingTestCase::run() {
               i,
               cycle);
       hm_->monitoring_->PrintNumSecondaryAccesses(filename);
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetDistanceToFreeBucket();
+
     }
 
     fprintf(stderr, "close\n");
