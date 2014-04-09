@@ -15,6 +15,8 @@ import pprint
 
 
 def compute_average(datapoints, has_shift):
+    if len(datapoints) == 0:
+        return 0, 0, 0
     #print datapoints
     num_freq = 0
     sum_metric = 0
@@ -47,6 +49,8 @@ def compute_average(datapoints, has_shift):
 
 def compute_median(datapoints, has_shift):
     # TODO: very inefficient, optimize this method
+    if len(datapoints) == 0:
+        return 0, 0
     values = []
     minimum = None
     for key, value in datapoints.iteritems():
@@ -204,8 +208,8 @@ def plot_robinhood(aggregates):
 
     for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance']):
         for index_metric, im in enumerate(aggregates.keys()):
-            if  'probing_sequence_length_search' not in im:
-                continue 
+            #if  'probing_sequence_length_search' not in im:
+            #    continue 
             for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
                 if '0.9' in it: continue
                 fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
@@ -215,9 +219,9 @@ def plot_robinhood(aggregates):
 
                 for ia in sorted(aggregates[im][it].keys()):
                     if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
-                      #or not any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift']):
+                      #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
                         v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
-                        v2 = any(algo in ia for algo in ['probing', 'robinhood', 'robinhoodshift'])
+                        v2 = any(algo in ia for algo in ['linear', 'tombstone', 'backshift'])
                         print "skip [%s] - %s %s" % (ia, v1, v2)
                         continue
 
@@ -231,11 +235,11 @@ def plot_robinhood(aggregates):
                             xs.append(cycle)
                         ys.append(sum(stats[statistic]) / len(stats[statistic]))
 
-                    if 'probing' in ia:
+                    if 'linear' in ia:
                         color = colors['blue']
-                    elif 'robinhoodshift' in ia:
+                    elif 'backshift' in ia:
                         color = colors['orange']
-                    elif 'robinhood' in ia:
+                    elif 'tombstone' in ia:
                         color = colors['red']
                     elif 'shadow' in ia:
                         color = '#000000'
@@ -243,14 +247,18 @@ def plot_robinhood(aggregates):
                         color = '#a3a3a3'
                     #names.append('%s-%s' % (ia, it))
                     name = ''
-                    if 'robinhoodshift' in ia:
+                    if 'backshift' in ia:
                         name = 'Robin Hood (backward shift)'
-                    elif 'robinhood' in ia:
+                    elif 'tombstone' in ia:
                         name = 'Robin Hood (tombstone)'
-                    elif 'probing' in ia:
+                    elif 'linear' in ia:
                         name = 'Linear probing'
+                    elif 'shadow' in ia:
+                        name = 'Hopscotch (shadow)'
+                    elif 'bitmap' in ia:
+                        name = 'Hopscotch (bitmap)'
                     else:
-                        name = 'wtf?'
+                        name = '[ERROR: unknown algorithm]'
 
                     if '10000-' in ia:
                         name = name + ' (10k)'
@@ -345,12 +353,12 @@ def plot_aggregates(aggregates):
 
                 ia_ref = None
                 for ia in sorted(aggregates[im][it].keys()):
-                    if 'probing' in ia:
+                    if 'linear' in ia:
                         ia_ref = ia
                         break
                 for ia in sorted(aggregates[im][it].keys()):
                     print 'ia', ia
-                    #if ia != 'probing': continue
+                    #if ia != 'linear': continue
                     xs = []
                     ys = []
                     stddevs = []
@@ -383,9 +391,9 @@ def plot_aggregates(aggregates):
                         #    details = True
          
                     print 'plot %s | %s' % (ia, im)
-                    if 'probing' in ia:
+                    if 'linear' in ia:
                         style = '-'
-                    elif 'robinhood' in ia:
+                    elif 'tombstone' in ia:
                         style = '-'
                     else:
                         style = '--'
