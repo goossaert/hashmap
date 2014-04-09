@@ -91,6 +91,7 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
   TombstoneHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = 0;
   uint64_t i;
+  int num_swaps = 0;
 
   for (i = probe_current; i < probing_max_; i++) {
     index_current = (index_init + i) % num_buckets_;
@@ -112,6 +113,7 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
         hash = hash_temp;
         monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
         UpdateInitDistance(probe_current, 1);
+        num_swaps += 1;
         if (entry != DELETED_BUCKET) {
           UpdateInitDistance(probe_distance, -1);
           probe_current = probe_distance;
@@ -127,6 +129,7 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
 
   monitoring_->AddDistanceToFreeBucket(i);
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
+  monitoring_->AddNumberOfSwaps(num_swaps);
 
   return 0;
 }

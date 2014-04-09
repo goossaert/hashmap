@@ -73,6 +73,8 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     return num_buckets_;
   }
 
+  int num_swaps = 0;
+
   uint64_t index_empty = index_current;
   while (   (index_empty >= index_init && (index_empty - index_init) >= size_neighborhood_)
          || (index_empty <  index_init && (index_empty + num_buckets_ - index_init) >= size_neighborhood_)) {
@@ -101,6 +103,8 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
           // Prepare for next iteration
           index_empty = index_candidate;
           found_swap = true;
+
+          num_swaps += 1;
           break;
         }
         mask = mask >> 1;
@@ -112,6 +116,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     }
   }
 
+  // Monitoring
   uint64_t psl;
   if (index_empty >= index_init) {
     psl = index_empty - index_init;
@@ -119,6 +124,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     psl = index_empty + num_buckets_ - index_init;
   }
   monitoring_->SetProbingSequenceLengthSearch(index_empty, psl);
+  monitoring_->AddNumberOfSwaps(num_swaps);
 
   return index_empty;
 }

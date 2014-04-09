@@ -148,13 +148,13 @@ void Monitoring::PrintDensity(std::string filepath) {
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {");
 
-  //fprintf(fd, "      \"0\": %" PRIu64 "", num_buckets_ - count_total);
+  //fprintf(fd, "      \"0\": %" PRIu64, num_buckets_ - count_total);
   bool first_item = true;
   for (it = density_.begin(); it != density_.end(); ++it) {
     if (!first_item) fprintf(fd, ",");
     first_item = false;
     fprintf(fd, "\n");
-    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64 "", it->first, it->second);
+    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -226,7 +226,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   for (it_count = counts.begin(); it_count != counts.end(); it_count++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
-    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64 "", it_count->first, it_count->second);
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it_count->first, it_count->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -296,7 +296,7 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
       if (!first_item) fprintf(fd, ",");
       first_item = false;
       fprintf(fd, "\n");
-      fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64 "", it->first, it->second);
+      fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
     }
     fprintf(fd, "\n");
     fprintf(fd, "    }\n");
@@ -349,7 +349,7 @@ void Monitoring::PrintNumSecondaryAccesses(std::string filepath) {
     if (!first_item) fprintf(fd, ",");
     first_item = false;
     fprintf(fd, "\n");
-    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64 "", it->first, it->second);
+    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -399,7 +399,7 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
   for (it = psl_insert_.begin(); it != psl_insert_.end(); it++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
-    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64 "", it->first, it->second);
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
   }
   fprintf(fd, "\n");
   fprintf(fd, "    }\n");
@@ -409,6 +409,56 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
     fclose(fd);
   }
 }
+
+
+
+void Monitoring::AddNumberOfSwaps(uint64_t distance) {
+                                            
+  std::map<uint64_t, uint64_t>::iterator it;
+  it = swaps_.find(distance);
+  if (it == swaps_.end()) {
+      swaps_[distance] = 0;
+  }
+  swaps_[distance] += 1;
+}
+
+
+void Monitoring::ResetNumberOfSwaps() {
+  swaps_.clear();
+}
+
+
+void Monitoring::PrintNumberOfSwaps(std::string filepath) {
+  std::map<uint64_t, uint64_t>::iterator it;
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "swap");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {\n");
+
+  bool first_item = true;
+  for (it = swaps_.begin(); it != swaps_.end(); it++) {
+    if (!first_item) fprintf(fd, ",\n");
+    first_item = false;
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
+
+  if (filepath != "stdout") {
+    fclose(fd);
+  }
+}
+
+
 
 
 

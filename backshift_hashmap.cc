@@ -87,6 +87,7 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
   BackshiftHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = 0;
   uint64_t i;
+  int num_swaps = 0;
 
   for (i = probe_current; i < probing_max_; i++) {
     index_current = (index_init + i) % num_buckets_;
@@ -109,12 +110,14 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
         monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
         //UpdateInitDistance(probe_current, 1);
         probe_current = probe_distance;
+        num_swaps += 1;
       }
     }
     probe_current++;
   }
 
   monitoring_->AddDistanceToFreeBucket(i);
+  monitoring_->AddNumberOfSwaps(num_swaps);
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;

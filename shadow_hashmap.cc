@@ -74,6 +74,8 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     return num_buckets_;
   }
 
+  int num_swaps = 0;
+
   uint64_t index_empty = index_current;
   while (index_empty - index_init >= size_neighborhood_) {
     uint64_t index_base_min = index_empty - (size_neighborhood_ - 1);
@@ -95,6 +97,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
 
         index_empty = index_candidate;
         found_swap = true;
+        num_swaps += 1;
         break;
       }
     }
@@ -140,6 +143,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
 
   monitoring_->SetProbingSequenceLengthSearch(index_empty % num_buckets_,
                                               index_empty - index_init);
+  monitoring_->AddNumberOfSwaps(num_swaps);
 
   return index_empty % num_buckets_;
 }

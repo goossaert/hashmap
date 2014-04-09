@@ -208,6 +208,18 @@ void BatchTestCase::run() {
       hm_->monitoring_->PrintDistanceToFreeBucket(filename);
       hm_->monitoring_->ResetDistanceToFreeBucket();
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumberOfSwaps(filename);
+      hm_->monitoring_->ResetNumberOfSwaps();
+
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
         uint64_t offset = r % keys.size();
@@ -381,6 +393,18 @@ void RippleTestCase::run() {
       hm_->monitoring_->PrintDistanceToFreeBucket(filename);
       hm_->monitoring_->ResetDistanceToFreeBucket();
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumberOfSwaps(filename);
+      hm_->monitoring_->ResetNumberOfSwaps();
+
 
       
 
@@ -542,6 +566,18 @@ void LoadingTestCase::run() {
               cycle);
       hm_->monitoring_->PrintDistanceToFreeBucket(filename);
       hm_->monitoring_->ResetDistanceToFreeBucket();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintNumberOfSwaps(filename);
+      hm_->monitoring_->ResetNumberOfSwaps();
 
     }
 
