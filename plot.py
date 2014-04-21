@@ -34,6 +34,9 @@ def compute_average(datapoints, has_shift):
             if minimum is None or occurrence < minimum:
                 minimum = occurrence
 
+    if num_freq <= 1:
+        return 0, 0, 0
+
     mean = float(sum_metric) / float(num_freq)
 
     sum_metric_squared = 0
@@ -50,7 +53,7 @@ def compute_average(datapoints, has_shift):
 def compute_median(datapoints, has_shift):
     # TODO: very inefficient, optimize this method
     if len(datapoints) == 0:
-        return 0, 0
+        return 0, 0, 0
     values = []
     minimum = None
     for key, value in datapoints.iteritems():
@@ -67,7 +70,8 @@ def compute_median(datapoints, has_shift):
     #print 'median', values
     median = values[len(values) / 2] - minimum
     perc95 = values[int(float(len(values)) * .95)] - minimum
-    return median, perc95
+    maximum = values[-1] - minimum
+    return median, perc95, maximum
 
 
 
@@ -78,6 +82,9 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
     for dirname, dirnames, filenames in os.walk(dirpath):
         # print path to all filenames.
         for filename in filenames:
+            basename, ext = os.path.splitext(filename)
+            if ext.lower() != '.json': continue
+
             if testcases != 'all' and not any(filename.startswith(testcase) for testcase in testcases.split(',')):
                 print 'skipping ' + filename
                 continue
@@ -105,7 +112,7 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
                     #print 'sub'
                     #pprint.pprint( data)
                     average, variance, stddev = compute_average(data['datapoints'], has_shift)
-                    median, perc95  = compute_median(data['datapoints'], has_shift)
+                    median, perc95, maximum = compute_median(data['datapoints'], has_shift)
                     #print "average %f" % (avg)
                     ia = data['algorithm']
                     im = data['metric']
@@ -127,7 +134,7 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
                     if ic not in aggregate[im][it][ia]:
                         aggregate[im][it][ia][ic] = {}
 
-                    for m in ['mean', 'median', 'perc95', 'standard_deviation', 'variance']:
+                    for m in ['mean', 'median', 'perc95', 'standard_deviation', 'variance', 'maximum']:
                         if m not in aggregate[im][it][ia][ic]:
                             aggregate[im][it][ia][ic][m] = []
 
@@ -136,6 +143,7 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
                     aggregate[im][it][ia][ic]['variance'].append(variance)
                     aggregate[im][it][ia][ic]['median'].append(median)
                     aggregate[im][it][ia][ic]['perc95'].append(perc95)
+                    aggregate[im][it][ia][ic]['maximum'].append(maximum)
             except:
                 print 'Crashed at file: [%s/%s]' % (dirname, filename)
                 print traceback.print_exc()
@@ -206,7 +214,7 @@ def plot_robinhood(aggregates):
     matplotlib.rc('font', **font)
 
 
-    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance']):
+    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance', 'maximum']):
         for index_metric, im in enumerate(aggregates.keys()):
             #if  'probing_sequence_length_search' not in im:
             #    continue 
@@ -218,12 +226,12 @@ def plot_robinhood(aggregates):
                 names = []
 
                 for ia in sorted(aggregates[im][it].keys()):
-                    if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
-                      #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
-                        v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
-                        v2 = any(algo in ia for algo in ['linear', 'tombstone', 'backshift'])
-                        print "skip [%s] - %s %s" % (ia, v1, v2)
-                        continue
+                    #if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
+                    #  #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
+                    #    v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
+                    #    v2 = any(algo in ia for algo in ['linear', 'tombstone', 'backshift'])
+                    #    print "skip [%s] - %s %s" % (ia, v1, v2)
+                    #    continue
 
                     xs = []
                     ys = []
@@ -235,39 +243,58 @@ def plot_robinhood(aggregates):
                             xs.append(cycle)
                         ys.append(sum(stats[statistic]) / len(stats[statistic]))
 
-                    if 'linear' in ia:
-                        color = colors['blue']
-                    elif 'backshift' in ia:
-                        color = colors['orange']
-                    elif 'tombstone' in ia:
-                        color = colors['red']
-                    elif 'shadow' in ia:
-                        color = '#000000'
-                    elif 'bitmap' in ia:
-                        color = '#a3a3a3'
-                    #names.append('%s-%s' % (ia, it))
-                    name = ''
-                    if 'backshift' in ia:
-                        name = 'Robin Hood (backward shift)'
-                    elif 'tombstone' in ia:
-                        name = 'Robin Hood (tombstone)'
-                    elif 'linear' in ia:
-                        name = 'Linear probing'
-                    elif 'shadow' in ia:
-                        name = 'Hopscotch (shadow)'
-                    elif 'bitmap' in ia:
-                        name = 'Hopscotch (bitmap)'
-                    else:
-                        name = '[ERROR: unknown algorithm]'
 
-                    if '10000-' in ia:
+                    filters = {
+                                'linear':    { 'color': colors['blue'],   'name': 'Linear probing',              'linewidth': 8, 'zorder': 1 },
+                                'backshift': { 'color': colors['orange'], 'name': 'Robin Hood (backward shift)', 'linewidth': 6, 'zorder': 2 },
+                                'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4, 'zorder': 3 },
+                                'shadow':    { 'color': '#000000',        'name': 'Hopscotch (shadow)',          'linewidth': 2, 'zorder': 4 },
+                                'bitmap':    { 'color': '#a3a3a3',        'name': 'Hopscotch (bitmap)',          'linewidth': 1, 'zorder': 5 },
+                              }
+
+                    name = '[ERROR: unknown algorithm]'
+                    color = '#000000'
+                    linewidth = 3
+                    zorder = 1
+                    for k, v in filters.iteritems():
+                        if k in ia:
+                            name = filters[k]['name']
+                            color = filters[k]['color']
+                            linewidth = filters[k]['linewidth']
+                            style = '-'
+                            zorder = filters[k]['zorder']
+                            break
+
+                    if '10000-' not in ia:
+                        continue
+
+                    if '10000a-' in ia:
                         name = name + ' (10k)'
                         style = '-'
-                    else:
+                        linewidth = 8
+                        color = colors['blue']
+                    elif '100000-' in ia:
                         name = name + ' (100k)'
-                        style = ':'
+                        style = '-'
+                        linewidth = 6
+                        color = colors['orange']
+                    elif '1000000-' in ia:
+                        name = name + ' (1M)'
+                        style = '-'
+                        linewidth = 4
+                        color = colors['red']
+                    elif '10000000-' in ia:
+                        name = name + ' (10M)'
+                        style = '-'
+                        linewidth = 2
+                        color = '#a3a3a3'
+                    elif '100000000-' in ia:
+                        name = name + ' (100M)'
+                        style = '-'
+                        linewidth = 1
+                        color = '#000000'
 
-                    line_current, = ax.plot(xs, ys, style, color=color, linewidth=3)
+                    line_current, = ax.plot(xs, ys, style, color=color, linewidth=linewidth, zorder=zorder)
                     names.append(name)
                     lines.append(line_current)
 
@@ -282,26 +309,34 @@ def plot_robinhood(aggregates):
 
                 if statistic == 'mean':
                     ax.set_ylabel('Mean DIB')
-                    if 'loading' not in it:
+                    if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,40))
+                        plt.axis((x1,x2,0,100))
+                        #plt.axis((x1,x2,0,40))
                 elif statistic == 'variance':
                     ax.set_ylabel('Variance of DIB')
-                    if 'loading' not in it:
+                    if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,180))
                 elif statistic == 'standard_deviation':
                     ax.set_ylabel('Standard deviation of DIB')
                 elif statistic == 'median':
                     ax.set_ylabel('Median of DIB')
-                    if 'loading' not in it:
+                    if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,40))
+                        plt.axis((x1,x2,0,100))
+                        #plt.axis((x1,x2,0,40))
                 elif statistic == 'perc95':
                     ax.set_ylabel('95th percentile of DIB')
-                    if 'loading' not in it:
+                    if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,70))
+                        plt.axis((x1,x2,0,100))
+                        #plt.axis((x1,x2,0,70))
+                elif statistic == 'maximum':
+                    ax.set_ylabel('Maximum DIB')
+                    if True or 'loading' not in it:
+                        x1,x2,y1,y2 = plt.axis()
+                        plt.axis((x1,x2,0,100))
                 #plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.title('Test case: %s' % (it.strip('-')))
                 plt.legend(lines, names, loc='upper left', prop={'size':12})
@@ -311,6 +346,13 @@ def plot_robinhood(aggregates):
                 #fig.set_size_inches(8.9, 6.5)
                 fig.set_size_inches(5, 3.75)
                 ax.grid(True)
+                
+                if any(metric in im for metric in ['blocks', 'aligned_distance']):
+                    plt.axis((x1,x2,0,11))
+                    ax.set_yticks(range(11))
+                    labels=['1', '8', '16', '32', '64', '128', '256', '512', '1024', '2048', '4096']
+                    plt.legend(lines, names, loc='upper left', prop={'size':1})
+                    ax.set_yticklabels(labels)
 
                 #from matplotlib import rcParams
                 #rcParams.update({'figure.autolayout': True})
