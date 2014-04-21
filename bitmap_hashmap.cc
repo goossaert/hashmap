@@ -37,8 +37,11 @@ int BitmapHashMap::Get(const std::string& key, std::string* value) {
   uint64_t index_init = hash % num_buckets_;
   uint32_t mask = 1 << (size_neighborhood_-1);
   bool found = false;
-  for (uint32_t i = 0; i < size_neighborhood_; i++) {
+  uint32_t i;
+  uint32_t dmb = 0;
+  for (i = 0; i < size_neighborhood_; i++) {
     if (buckets_[index_init].bitmap & mask) {
+      dmb = i;
       uint64_t index_current = (index_init + i) % num_buckets_;
       if (   buckets_[index_current].entry != NULL
           && key.size() == buckets_[index_current].entry->size_key
@@ -54,6 +57,8 @@ int BitmapHashMap::Get(const std::string& key, std::string* value) {
 
   if (found) return 0;
 
+  monitoring_->AddDMB(dmb);
+  monitoring_->AddAlignedDMB(index_init, (index_init + i) % num_buckets_);
   return 1;
 }
 
@@ -65,6 +70,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     if (buckets_[index_current].entry == NULL) {
       found = true;
       monitoring_->AddDistanceToFreeBucket(i);
+      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
       break;
     }
   }

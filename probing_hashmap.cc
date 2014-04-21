@@ -34,7 +34,8 @@ int ProbingHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   bool found = false;
-  for (uint32_t i = 0; i < probing_max_; i++) {
+  uint32_t i; 
+  for (i = 0; i < probing_max_; i++) {
     uint64_t index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == DELETED_BUCKET) {
       continue;
@@ -53,9 +54,10 @@ int ProbingHashMap::Get(const std::string& key, std::string* value) {
 
   if (found) return 0;
 
+  monitoring_->AddDMB(i);
+  monitoring_->AddAlignedDMB(index_init, (index_init + i) % num_buckets_);
   return 1;
 }
-
 
 
 
@@ -70,6 +72,7 @@ uint64_t ProbingHashMap::FindEmptyBucket(uint64_t index_init) {
       found = true;
       monitoring_->SetProbingSequenceLengthSearch(index_current % num_buckets_, i);
       monitoring_->AddDistanceToFreeBucket(i);
+      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
       break;
     }
   }

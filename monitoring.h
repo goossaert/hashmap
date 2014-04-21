@@ -57,6 +57,18 @@ public:
   void ResetDistanceToFreeBucket();
   void PrintDistanceToFreeBucket(std::string filepath);
 
+  void AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t index_free_bucket);
+  void ResetAlignedDistanceToFreeBucket();
+  void PrintAlignedDistanceToFreeBucket(std::string filepath);
+
+  void AddDMB(uint64_t distance);
+  void ResetDMB();
+  void PrintDMB(std::string filepath);
+  
+  void AddAlignedDMB(uint64_t index_init, uint64_t index_free_bucket);
+  void ResetAlignedDMB();
+  void PrintAlignedDMB(std::string filepath);
+
   void AddNumberOfSwaps(uint64_t distance);
   void ResetNumberOfSwaps();
   void PrintNumberOfSwaps(std::string filepath);
@@ -90,6 +102,9 @@ private:
   std::map<uint64_t, uint64_t> density_;
   std::map<uint64_t, uint64_t> psl_search_;
   std::map<uint64_t, uint64_t> psl_insert_;
+  std::map<uint64_t, uint64_t> aligned_psl_insert_;
+  std::map<uint64_t, uint64_t> dmb_;
+  std::map<uint64_t, uint64_t> aligned_dmb_;
   std::map<uint64_t, uint64_t> swaps_;
   HashMap *hm_;
   uint64_t cycle_;

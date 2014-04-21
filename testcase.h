@@ -6,6 +6,7 @@
 #endif
 #include <inttypes.h>
 #include <string.h>
+#include <sstream>
 #include <stdio.h>
 #include <errno.h>
 

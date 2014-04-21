@@ -38,7 +38,8 @@ int TombstoneHashMap::Get(const std::string& key, std::string* value) {
   uint64_t index_init = hash % num_buckets_;
   uint64_t probe_distance = 0;
   bool found = false;
-  for (uint32_t i = 0; i < probing_max_; i++) {
+  uint32_t i;
+  for (i = 0; i < probing_max_; i++) {
     uint64_t index_current = (index_init + i) % num_buckets_;
     FillDistanceToInitIndex(index_current, &probe_distance);
     if (   buckets_[index_current].entry == NULL
@@ -61,6 +62,8 @@ int TombstoneHashMap::Get(const std::string& key, std::string* value) {
 
   if (found) return 0;
 
+  monitoring_->AddDMB(i);
+  monitoring_->AddAlignedDMB(index_init, (index_init + i) % num_buckets_);
   return 1;
 }
 
@@ -128,6 +131,7 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
   }
 
   monitoring_->AddDistanceToFreeBucket(i);
+  monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
   monitoring_->UpdateNumItemsInBucket(index_init, 1);
   monitoring_->AddNumberOfSwaps(num_swaps);
 

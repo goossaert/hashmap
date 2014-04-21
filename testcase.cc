@@ -20,6 +20,12 @@ int exists_or_mkdir(const char *path) {
   return 0;
 }
 
+std::string concatenate(std::string const& str, int i)
+{
+    std::stringstream s;
+    s << str << i;
+    return s.str();
+}
 
 void TestCase::InsertEntries(uint32_t num_items, std::set<std::string>& keys) {
   std::string key;
@@ -28,6 +34,8 @@ void TestCase::InsertEntries(uint32_t num_items, std::set<std::string>& keys) {
   buffer[key_size] = '\0';
   char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   std::set<std::string>::iterator it_find;
+
+  std::string value_dummy;
 
   for (uint32_t j = 0; j < num_items; j++) {
     bool is_valid = false;
@@ -45,6 +53,11 @@ void TestCase::InsertEntries(uint32_t num_items, std::set<std::string>& keys) {
       }
     }
     keys.insert(key);
+
+    int ret_get = hm_->Get(key, &value_dummy);
+    if (ret_get != 1) {
+      fprintf(stderr, "Get() error\n");
+    }
     int ret_put = hm_->Put(key, key);
     //fprintf(stderr, "Put() [%s]\n", key.c_str());
     if (ret_put != 0) {
@@ -101,9 +114,7 @@ void BatchTestCase::run() {
 
 
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 10; i++) {
-
-
+  for (int i = 0; i < 1; i++) {
     
     num_items = num_items_big;
     srand(i);
@@ -123,6 +134,7 @@ void BatchTestCase::run() {
     }
 
 
+    std::string value_dummy;
 
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
@@ -143,6 +155,10 @@ void BatchTestCase::run() {
           }
         }
         keys.insert(key);
+        int ret_get = hm_->Get(key, &value_dummy);
+        if (ret_get != 1) {
+          fprintf(stderr, "Get() error\n");
+        }
         int ret_put = hm_->Put(key, key);
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
@@ -209,6 +225,18 @@ void BatchTestCase::run() {
       hm_->monitoring_->ResetDistanceToFreeBucket();
 
       sprintf(filename,
+              "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+
+      sprintf(filename,
               "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
@@ -219,6 +247,30 @@ void BatchTestCase::run() {
               cycle);
       hm_->monitoring_->PrintNumberOfSwaps(filename);
       hm_->monitoring_->ResetNumberOfSwaps();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dmb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDMB(filename);
+      hm_->monitoring_->ResetDMB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-admb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDMB(filename);
+      hm_->monitoring_->ResetAlignedDMB();
 
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
@@ -278,7 +330,7 @@ void RippleTestCase::run() {
   sprintf(pt_json, "{\"load_factor_max\": %.2f, \"load_factor_remove\": %.2f}", load_factor_max_, load_factor_remove_);
 
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 1; i++) {
     num_items = num_items_big;
     srand(i);
     keys.clear();
@@ -294,6 +346,8 @@ void RippleTestCase::run() {
       fprintf(stderr, "Could not create directory [%s]\n", directory_sub.c_str());
       exit(1);
     }
+
+    std::string value_dummy;
 
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
@@ -314,13 +368,17 @@ void RippleTestCase::run() {
           }
         }
         keys.insert(key);
+        int ret_get = hm_->Get(key, &value_dummy);
+        if (ret_get != 1) {
+          fprintf(stderr, "Get() error\n");
+        }
         int ret_put = hm_->Put(key, key);
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
           fprintf(stderr, "Put() error\n");
           // break on error
           has_error_on_put = true;
-          break;
+          //break;
         }
 
         if (cycle > 0) {
@@ -394,6 +452,18 @@ void RippleTestCase::run() {
       hm_->monitoring_->ResetDistanceToFreeBucket();
 
       sprintf(filename,
+              "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+
+      sprintf(filename,
               "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
@@ -404,6 +474,32 @@ void RippleTestCase::run() {
               cycle);
       hm_->monitoring_->PrintNumberOfSwaps(filename);
       hm_->monitoring_->ResetNumberOfSwaps();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dmb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDMB(filename);
+      hm_->monitoring_->ResetDMB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-admb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDMB(filename);
+      hm_->monitoring_->ResetAlignedDMB();
+
+
 
 
       
@@ -434,7 +530,7 @@ void LoadingTestCase::run() {
   char buffer[key_size + 1];
   buffer[key_size] = '\0';
   char filename[1024];
-  char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  //char alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uint32_t num_items;
   uint32_t num_items_big = num_buckets_;
 
@@ -451,9 +547,11 @@ void LoadingTestCase::run() {
   char pt_json[1024];
   sprintf(pt_json, "{}");
 
+  uint64_t key_id_current = 0;
+
   num_items = num_items_big / 50;
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 1; i++) {
     srand(i);
     keys.clear();
     hm_->Open();
@@ -469,11 +567,15 @@ void LoadingTestCase::run() {
       exit(1);
     }
 
+    std::string value_dummy;
+
     for (int cycle = 0; cycle < 50; cycle++) {
       fprintf(stderr, "instance %d cycle %d\n", i, cycle);
       bool has_error_on_put = false;
       for (uint32_t j = 0; j < num_items; j++) {
         bool is_valid = false;
+
+        /*
         while (!is_valid) {
           for (int k = 0; k < key_size; k++) {
             buffer[k] = alpha[rand() % 62];
@@ -487,7 +589,25 @@ void LoadingTestCase::run() {
             //fprintf(stdout, "%d\n", keys.size());
           }
         }
+        */
+
+        while (!is_valid) {
+          key_id_current += 1 + rand() % 62;
+          key = concatenate( "key", key_id_current );
+          //fprintf(stderr, "generated key %s\n", key.c_str());
+          it_find = keys.find(key);
+          if (it_find == keys.end()) {
+            is_valid = true;
+          } else {
+            fprintf(stderr, "Error: key already in the hash table, this should not happen\n");
+          }
+        }
+
         keys.insert(key);
+        int ret_get = hm_->Get(key, &value_dummy);
+        if (ret_get != 1) {
+          fprintf(stderr, "Get() error\n");
+        }
         int ret_put = hm_->Put(key, key);
         //fprintf(stderr, "Put() [%s]\n", key.c_str());
         if (ret_put != 0) {
@@ -568,6 +688,19 @@ void LoadingTestCase::run() {
       hm_->monitoring_->ResetDistanceToFreeBucket();
 
       sprintf(filename,
+              "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
+      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+
+
+      sprintf(filename,
               "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
@@ -578,6 +711,33 @@ void LoadingTestCase::run() {
               cycle);
       hm_->monitoring_->PrintNumberOfSwaps(filename);
       hm_->monitoring_->ResetNumberOfSwaps();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dmb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDMB(filename);
+      hm_->monitoring_->ResetDMB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-admb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDMB(filename);
+      hm_->monitoring_->ResetAlignedDMB();
+
+
+
 
     }
 

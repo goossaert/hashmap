@@ -36,7 +36,8 @@ int ShadowHashMap::Get(const std::string& key, std::string* value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   bool found = false;
-  for (uint32_t i = 0; i < size_neighborhood_; i++) {
+  uint32_t i;
+  for (i = 0; i < size_neighborhood_; i++) {
     uint64_t index_current = (index_init + i) % num_buckets_;
     if (   buckets_[index_current].entry != NULL
         && buckets_[index_current].hash  == hash
@@ -51,6 +52,8 @@ int ShadowHashMap::Get(const std::string& key, std::string* value) {
 
   if (found) return 0;
 
+  monitoring_->AddDMB(size_neighborhood_);
+  monitoring_->AddAlignedDMB(index_init, (index_init + i) % num_buckets_);
   return 1;
 }
 
@@ -66,6 +69,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     if (buckets_[index_current % num_buckets_].entry == NULL) {
       found = true;
       monitoring_->AddDistanceToFreeBucket(i);
+      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
       break;
     }
   }
