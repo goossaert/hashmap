@@ -247,9 +247,9 @@ def plot_robinhood(aggregates):
                     filters = {
                                 'linear':    { 'color': colors['blue'],   'name': 'Linear probing',              'linewidth': 8, 'zorder': 1 },
                                 'backshift': { 'color': colors['orange'], 'name': 'Robin Hood (backward shift)', 'linewidth': 6, 'zorder': 2 },
-                                'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4, 'zorder': 3 },
-                                'shadow':    { 'color': '#000000',        'name': 'Hopscotch (shadow)',          'linewidth': 2, 'zorder': 4 },
-                                'bitmap':    { 'color': '#a3a3a3',        'name': 'Hopscotch (bitmap)',          'linewidth': 1, 'zorder': 5 },
+                                'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4.5, 'zorder': 3 },
+                                'shadow':    { 'color': '#000000',        'name': 'Hopscotch (shadow)',          'linewidth': 3, 'zorder': 4 },
+                                'bitmap':    { 'color': '#a3a3a3',        'name': 'Hopscotch (bitmap)',          'linewidth': 1.75, 'zorder': 5 },
                               }
 
                     name = '[ERROR: unknown algorithm]'
@@ -273,22 +273,22 @@ def plot_robinhood(aggregates):
                         style = '-'
                         linewidth = 8
                         color = colors['blue']
-                    elif '100000-' in ia:
+                    elif '100000a-' in ia:
                         name = name + ' (100k)'
                         style = '-'
                         linewidth = 6
                         color = colors['orange']
-                    elif '1000000-' in ia:
+                    elif '1000000a-' in ia:
                         name = name + ' (1M)'
                         style = '-'
                         linewidth = 4
                         color = colors['red']
-                    elif '10000000-' in ia:
+                    elif '10000000a-' in ia:
                         name = name + ' (10M)'
                         style = '-'
                         linewidth = 2
                         color = '#a3a3a3'
-                    elif '100000000-' in ia:
+                    elif '100000000a-' in ia:
                         name = name + ' (100M)'
                         style = '-'
                         linewidth = 1
@@ -348,9 +348,9 @@ def plot_robinhood(aggregates):
                 ax.grid(True)
                 
                 if any(metric in im for metric in ['blocks', 'aligned_distance']):
-                    plt.axis((x1,x2,0,11))
-                    ax.set_yticks(range(11))
-                    labels=['1', '8', '16', '32', '64', '128', '256', '512', '1024', '2048', '4096']
+                    labels=['1', '8', '16', '32', '64', '128', '256', '512', '1024', '2048', '4096', '8192', '16384', '32768', '65536', '131072']
+                    plt.axis((x1,x2,0,len(labels)))
+                    ax.set_yticks(range(len(labels)))
                     plt.legend(lines, names, loc='upper left', prop={'size':1})
                     ax.set_yticklabels(labels)
 

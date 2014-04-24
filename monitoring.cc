@@ -449,7 +449,7 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
 
 
 void Monitoring::AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t index_free_bucket) {
-  int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+  int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };//, 
   std::map<uint64_t, uint64_t>::iterator it_find;
   int index_selected = 10;
   for (int i = 10; i > 0; i--) {
@@ -621,23 +621,34 @@ void Monitoring::PrintDMB(std::string filepath) {
 
 void Monitoring::AddAlignedDMB(uint64_t index_init, uint64_t index_free_bucket) {
   int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+  uint64_t powerOf2 = 8;
   std::map<uint64_t, uint64_t>::iterator it_find;
-  int index_selected = 10;
-  for (int i = 10; i > 0; i--) {
-    uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
-    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
-    uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, size_blocks[i]);
-    int num_bytes;
-    if (offset_init <= offset_stored) {
-      num_bytes = offset_stored - offset_init;
-    } else {
-      num_bytes = offset_end - offset_init + offset_stored;
-    }
+  if (index_init > index_free_bucket) {
+    index_free_bucket += num_buckets_ * size_bucket_;
+  }
+  int index_selected = 63;
+  for (int i = 1; i < 63; i++) {
+    //uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
+    //uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
+    //uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, size_blocks[i]);
 
-    if (num_bytes > 0) {
+    uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, powerOf2);
+    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, powerOf2);
+    uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, powerOf2);
+
+    //int num_bytes;
+    //if (offset_init <= offset_stored) {
+    //  num_bytes = offset_stored - offset_init;
+    //} else {
+    //  num_bytes = offset_end - offset_init + offset_stored;
+    //}
+
+    if (offset_init == offset_stored) {
+      index_selected = i;
       break;
     }
-    index_selected = i;
+
+    powerOf2 *= 2;
   }
 
   it_find = aligned_dmb_.find(index_selected);
