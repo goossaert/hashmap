@@ -155,13 +155,13 @@ void BatchTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+      sprintf(filename, "%s/%s-%s-%s--%s-dib--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
 
 
       sprintf(filename,
-              "%s/%s-%s-%s--%s-blocks--instance%05d-cycle%04d.json",
+              "%s/%s-%s-%s--%s-adib--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
               metadata["name"].c_str(),

@@ -125,7 +125,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "dib");
+  PrintInfo(fd, "DIB");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -162,9 +162,9 @@ void Monitoring::GetNumScannedBlocks(std::map<uint64_t, uint64_t>& out_num_scann
     }
 
     //for (int i = 10; i > 0; i--) {
-    int index_selected = 63;
-    uint64_t chunk_size = 8;
-    for (int i = 1; i < 63; i++) {
+    int index_selected = 64;
+    uint64_t chunk_size = 16;
+    for (int i = 4; i < 64; i++) {
       uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
       uint64_t offset_stored = AlignOffsetToBlock(index_stored_adjusted * size_bucket_, chunk_size);
 
@@ -199,7 +199,7 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
   std::map<uint64_t, uint64_t> num_scanned_blocks;
   GetNumScannedBlocks(num_scanned_blocks, hm_);
   fprintf(fd, "{\n");
-  sprintf(metric, "aligned_dib");
+  sprintf(metric, "aligned DIB");
   PrintInfo(fd, metric);
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {");
@@ -249,7 +249,7 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "dfb");
+  PrintInfo(fd, "DFB");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -275,9 +275,9 @@ void Monitoring::AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t in
   if (index_init > index_free_bucket) {
     index_free_bucket += num_buckets_;
   }
-  int index_selected = 63;
-  uint64_t chunk_size = 8;
-  for (int i = 1; i < 63; i++) {
+  int index_selected = 64;
+  uint64_t chunk_size = 16;
+  for (int i = 4; i < 64; i++) {
     uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
     uint64_t offset_free_bucket = AlignOffsetToBlock(index_free_bucket * size_bucket_, chunk_size);
     if (offset_init == offset_free_bucket) {
@@ -313,7 +313,7 @@ void Monitoring::PrintAlignedDistanceToFreeBucket(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "aligned_dfb");
+  PrintInfo(fd, "aligned DFB");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -415,7 +415,7 @@ void Monitoring::PrintDMB(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "dmb");
+  PrintInfo(fd, "DMB");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -442,9 +442,9 @@ void Monitoring::AddAlignedDMB(uint64_t index_init, uint64_t index_missing_bucke
   if (index_init > index_missing_bucket) {
     index_missing_bucket += num_buckets_;
   }
-  int index_selected = 63;
-  uint64_t chunk_size = 8;
-  for (int i = 1; i < 63; i++) {
+  int index_selected = 64;
+  uint64_t chunk_size = 16;
+  for (int i = 4; i < 64; i++) {
     uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
     uint64_t offset_missing_bucket = AlignOffsetToBlock(index_missing_bucket * size_bucket_, chunk_size);
     if (offset_init == offset_missing_bucket) {
@@ -482,7 +482,7 @@ void Monitoring::PrintAlignedDMB(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "aligned_dmb");
+  PrintInfo(fd, "aligned DMB");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 

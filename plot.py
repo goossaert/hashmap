@@ -214,14 +214,16 @@ def plot_robinhood(aggregates):
     matplotlib.rc('font', **font)
 
 
-    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance', 'maximum']):
+    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'maximum', 'variance']):
         for index_metric, im in enumerate(aggregates.keys()):
             #if  'probing_sequence_length_search' not in im:
             #    continue 
+            #fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
+            fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + 1)
+            legend = None
             for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
                 if '0.9' in it: continue
-                fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
-                ax = fig.add_subplot(111)
+                ax = fig.add_subplot(2, 2, index_testcase+1)
                 lines = []
                 names = []
 
@@ -299,7 +301,7 @@ def plot_robinhood(aggregates):
                     lines.append(line_current)
 
 
-                print len(lines), len(names)
+                print "%s | %s | %s" % (statistic, im, it)
 
 
                 if 'loading' in it:
@@ -308,59 +310,71 @@ def plot_robinhood(aggregates):
                     ax.set_xlabel('Iterations')
 
                 if statistic == 'mean':
-                    ax.set_ylabel('Mean DIB')
+                    ax.set_ylabel('Mean %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,100))
                         #plt.axis((x1,x2,0,40))
                 elif statistic == 'variance':
-                    ax.set_ylabel('Variance of DIB')
+                    ax.set_ylabel('Variance of %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,180))
                 elif statistic == 'standard_deviation':
-                    ax.set_ylabel('Standard deviation of DIB')
+                    ax.set_ylabel('Standard deviation of %s' % im)
                 elif statistic == 'median':
-                    ax.set_ylabel('Median of DIB')
+                    ax.set_ylabel('Median of %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,100))
                         #plt.axis((x1,x2,0,40))
                 elif statistic == 'perc95':
-                    ax.set_ylabel('95th percentile of DIB')
+                    ax.set_ylabel('95th percentile of %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,100))
                         #plt.axis((x1,x2,0,70))
                 elif statistic == 'maximum':
-                    ax.set_ylabel('Maximum DIB')
+                    ax.set_ylabel('Maximum %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
                         plt.axis((x1,x2,0,180))
                 #plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.title('Test case: %s' % (it.strip('-')))
-                plt.legend(lines, names, loc='upper left', prop={'size':12})
+                #plt.legend(lines, names, loc='upper left', prop={'size':12})
                 if not os.path.isdir('plots'):
                     os.mkdir('plots')
                 #fig.set_size_inches(8, 6)
                 #fig.set_size_inches(8.9, 6.5)
-                fig.set_size_inches(5, 3.75)
+                #reactive fig.set_size_inches(5, 3.75)
                 ax.grid(True)
-                
-                if any(metric in im for metric in ['blocks', 'aligned_']):
-                    labels=['8 B', '16 B', '32 B', '64 B', '128 B', '256 B', '512 B', '1 KB', '2 KB', '4 KB', '8 KB', '16 KB', '32 KB', '64 KB', '128 KB']
-                    plt.axis((x1,x2,1,len(labels)))
-                    ax.set_yticks(range(len(labels)))
-                    plt.legend(lines, names, loc='upper left', prop={'size':1})
+
+                if any(metric in im for metric in ['blocks', 'aligned']) and statistic != 'variance':
+                    labels=['16 B', '32 B', '64 B', '128 B', '256 B', '512 B', '1 KB', '2 KB', '4 KB', '8 KB', '16 KB', '32 KB', '64 KB', '128 KB']
+                    plt.axis((x1,x2,4,4+len(labels)))
+                    ax.set_yticks(range(4,4+len(labels)))
+                    #plt.legend(lines, names, loc='upper left', prop={'size':1}).set_visible(False)
                     ax.set_yticklabels(labels)
+
+                if index_testcase == 3:
+                    legend = plt.legend(lines, names, prop={'size':12}, bbox_to_anchor=(0.2, -0.3))
+                else:
+                    plt.legend(lines, names).set_visible(False)
+
+                
+
 
                 #from matplotlib import rcParams
                 #rcParams.update({'figure.autolayout': True})
-                fig.subplots_adjust(bottom=0.15, left=0.20)
+
+                #reactive fig.subplots_adjust(bottom=0.15, left=0.20)
                 #ax.legend().set_visible(False)
 
-                plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=72)
-                #fig.close()
+                #plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=72)
+            fig.set_size_inches(10, 7.5)
+            plt.tight_layout()
+            plt.savefig('plots/%s_%s.png' % (im.lower(), statistic), dpi=72, bbox_extra_artists=(legend,), bbox_inches='tight')
+
 
 
 
@@ -468,6 +482,7 @@ def plot_aggregates(aggregates):
                 plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.legend(lines, names, loc='upper left')
                 fig.set_size_inches(8, 6)
+
                 if not os.path.isdir('plots'):
                     os.mkdir('plots')
                 plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=300)
