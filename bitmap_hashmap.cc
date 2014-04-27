@@ -69,8 +69,8 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
       found = true;
-      monitoring_->AddDistanceToFreeBucket(i);
-      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
+      monitoring_->AddDFB(i);
+      monitoring_->AddAlignedDFB(index_init, index_current);
       break;
     }
   }
@@ -102,9 +102,9 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
           buckets_[index_base].bitmap |= mask_new;
 
           // Move PSL monitoring
-          uint64_t psl = monitoring_->GetProbingSequenceLengthSearch(index_candidate);
-          monitoring_->RemoveProbingSequenceLengthSearch(index_candidate);
-          monitoring_->SetProbingSequenceLengthSearch(index_empty, psl);
+          uint64_t dib = monitoring_->GetDIB(index_candidate);
+          monitoring_->RemoveDIB(index_candidate);
+          monitoring_->SetDIB(index_empty, dib);
 
           // Prepare for next iteration
           index_empty = index_candidate;
@@ -123,13 +123,13 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
   }
 
   // Monitoring
-  uint64_t psl;
+  uint64_t dib;
   if (index_empty >= index_init) {
-    psl = index_empty - index_init;
+    dib = index_empty - index_init;
   } else {
-    psl = index_empty + num_buckets_ - index_init;
+    dib = index_empty + num_buckets_ - index_init;
   }
-  monitoring_->SetProbingSequenceLengthSearch(index_empty, psl);
+  monitoring_->SetDIB(index_empty, dib);
   monitoring_->AddNumberOfSwaps(num_swaps);
 
   return index_empty;
@@ -198,7 +198,7 @@ int BitmapHashMap::Remove(const std::string& key) {
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
     buckets_[index_init].bitmap = buckets_[index_init].bitmap & (~mask);
-    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    monitoring_->RemoveDIB(index_current);
     return 0;
   }
 

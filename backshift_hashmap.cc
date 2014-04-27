@@ -95,7 +95,7 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
   for (i = probe_current; i < probing_max_; i++) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
-      monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
+      monitoring_->SetDIB(index_current, probe_current);
       //UpdateInitDistance(probe_current, 1);
       buckets_[index_current].entry = entry;
       buckets_[index_current].hash = hash;
@@ -110,7 +110,7 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
         buckets_[index_current].hash = hash;
         entry = entry_temp;
         hash = hash_temp;
-        monitoring_->SetProbingSequenceLengthSearch(index_current, probe_current);
+        monitoring_->SetDIB(index_current, probe_current);
         //UpdateInitDistance(probe_current, 1);
         probe_current = probe_distance;
         num_swaps += 1;
@@ -119,8 +119,8 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
     probe_current++;
   }
 
-  monitoring_->AddDistanceToFreeBucket(i);
-  monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
+  monitoring_->AddDFB(i);
+  monitoring_->AddAlignedDFB(index_init, index_current);
   monitoring_->AddNumberOfSwaps(num_swaps);
 
   return 0;
@@ -167,13 +167,13 @@ int BackshiftHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     //buckets_[index_current].entry = NULL;
-    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    monitoring_->RemoveDIB(index_current);
     for (uint64_t i = 1; i < num_buckets_; i++) {
       uint64_t prev = (index_current + i - 1) % num_buckets_;
       uint64_t idx = (index_current + i) % num_buckets_;
       if (buckets_[idx].entry == NULL) {
         buckets_[prev].entry = NULL;
-        monitoring_->RemoveProbingSequenceLengthSearch(prev);
+        monitoring_->RemoveDIB(prev);
         break;
       }
       uint64_t dist;
@@ -182,12 +182,12 @@ int BackshiftHashMap::Remove(const std::string& key) {
       }
       if (dist == 0) {
         buckets_[prev].entry = NULL;
-        monitoring_->RemoveProbingSequenceLengthSearch(prev);
+        monitoring_->RemoveDIB(prev);
         break;
       }
       buckets_[prev].entry = buckets_[idx].entry;
       buckets_[prev].hash = buckets_[idx].hash;
-      monitoring_->SetProbingSequenceLengthSearch(prev, dist-1);
+      monitoring_->SetDIB(prev, dist-1);
     }
     num_buckets_used_ -= 1;
     return 0;

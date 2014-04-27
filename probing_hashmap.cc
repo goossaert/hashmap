@@ -70,9 +70,9 @@ uint64_t ProbingHashMap::FindEmptyBucket(uint64_t index_init) {
     if (   buckets_[index_current % num_buckets_].entry == NULL
         || buckets_[index_current % num_buckets_].entry == DELETED_BUCKET) {
       found = true;
-      monitoring_->SetProbingSequenceLengthSearch(index_current % num_buckets_, i);
-      monitoring_->AddDistanceToFreeBucket(i);
-      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
+      monitoring_->SetDIB(index_current % num_buckets_, i);
+      monitoring_->AddDFB(i);
+      monitoring_->AddAlignedDFB(index_init, index_current);
       break;
     }
   }
@@ -142,7 +142,7 @@ int ProbingHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = DELETED_BUCKET;
-    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    monitoring_->RemoveDIB(index_current);
     //fprintf(stderr, "Remove() OK\n");
     return 0;
   } else {

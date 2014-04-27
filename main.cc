@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
   std::cout << "Clustering" << std::endl; 
   hm->monitoring_->PrintClustering(hm);
 
-  hm->monitoring_->PrintProbingSequenceLengthSearch("probing_sequence_length_search.json");
+  hm->monitoring_->PrintDIB("probing_sequence_length_search.json");
   hm->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 
   */

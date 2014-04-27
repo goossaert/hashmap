@@ -42,18 +42,18 @@ public:
   void PrintClustering(HashMap *hm);
   const std::map<uint64_t, uint64_t>& GetClustering();
 
-  uint64_t GetProbingSequenceLengthSearch(uint64_t index);
-  void SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl);
-  void RemoveProbingSequenceLengthSearch(uint64_t index);
-  void PrintProbingSequenceLengthSearch(std::string filepath);
+  uint64_t GetDIB(uint64_t index);
+  void SetDIB(uint64_t index, uint64_t dib);
+  void RemoveDIB(uint64_t index);
+  void PrintDIB(std::string filepath);
 
-  void AddDistanceToFreeBucket(uint64_t distance);
-  void ResetDistanceToFreeBucket();
-  void PrintDistanceToFreeBucket(std::string filepath);
+  void AddDFB(uint64_t distance);
+  void ResetDFB();
+  void PrintDFB(std::string filepath);
 
-  void AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t index_free_bucket);
-  void ResetAlignedDistanceToFreeBucket();
-  void PrintAlignedDistanceToFreeBucket(std::string filepath);
+  void AddAlignedDFB(uint64_t index_init, uint64_t index_free_bucket);
+  void ResetAlignedDFB();
+  void PrintAlignedDFB(std::string filepath);
 
   void AddDMB(uint64_t distance);
   void ResetDMB();
@@ -91,7 +91,7 @@ private:
   uint64_t num_buckets_;
   uint64_t max_num_items_in_bucket_;
   uint64_t size_bucket_;
-  std::map<uint64_t, uint64_t> psl_search_;
+  std::map<uint64_t, uint64_t> dib_;
   std::map<uint64_t, uint64_t> dfb_;
   std::map<uint64_t, uint64_t> aligned_dfb_;
   std::map<uint64_t, uint64_t> dmb_;

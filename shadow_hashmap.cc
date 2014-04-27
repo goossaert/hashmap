@@ -68,8 +68,8 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     index_current = index_init + i;
     if (buckets_[index_current % num_buckets_].entry == NULL) {
       found = true;
-      monitoring_->AddDistanceToFreeBucket(i);
-      monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
+      monitoring_->AddDFB(i);
+      monitoring_->AddAlignedDFB(index_init, index_current);
       break;
     }
   }
@@ -95,9 +95,9 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
         buckets_[index_candidate % num_buckets_].entry = NULL;
         buckets_[index_candidate % num_buckets_].hash = 0;
 
-        uint64_t psl = monitoring_->GetProbingSequenceLengthSearch(index_candidate % num_buckets_);
-        monitoring_->RemoveProbingSequenceLengthSearch(index_candidate % num_buckets_);
-        monitoring_->SetProbingSequenceLengthSearch(index_empty % num_buckets_, psl);
+        uint64_t dib = monitoring_->GetDIB(index_candidate % num_buckets_);
+        monitoring_->RemoveDIB(index_candidate % num_buckets_);
+        monitoring_->SetDIB(index_empty % num_buckets_, dib);
 
         index_empty = index_candidate;
         found_swap = true;
@@ -145,7 +145,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
     }
   }
 
-  monitoring_->SetProbingSequenceLengthSearch(index_empty % num_buckets_,
+  monitoring_->SetDIB(index_empty % num_buckets_,
                                               index_empty - index_init);
   monitoring_->AddNumberOfSwaps(num_swaps);
 
@@ -200,7 +200,7 @@ int ShadowHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
-    monitoring_->RemoveProbingSequenceLengthSearch(index_current);
+    monitoring_->RemoveDIB(index_current);
     return 0;
   }
 

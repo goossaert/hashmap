@@ -156,8 +156,8 @@ void BatchTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
       sprintf(filename, "%s/%s-%s-%s--%s-dib--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
-      fprintf(stderr, "filename psl %s\n", filename);
-      hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
+      fprintf(stderr, "filename dib %s\n", filename);
+      hm_->monitoring_->PrintDIB(filename);
 
 
       sprintf(filename,
@@ -180,8 +180,8 @@ void BatchTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetDistanceToFreeBucket();
+      hm_->monitoring_->PrintDFB(filename);
+      hm_->monitoring_->ResetDFB();
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
@@ -192,8 +192,8 @@ void BatchTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+      hm_->monitoring_->PrintAlignedDFB(filename);
+      hm_->monitoring_->ResetAlignedDFB();
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
@@ -346,9 +346,9 @@ void RippleTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-      sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
-      fprintf(stderr, "filename psl %s\n", filename);
-      hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
+      sprintf(filename, "%s/%s-%s-%s--%s-dib--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
+      fprintf(stderr, "filename dib %s\n", filename);
+      hm_->monitoring_->PrintDIB(filename);
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-blocks--instance%05d-cycle%04d.json",
@@ -370,8 +370,8 @@ void RippleTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetDistanceToFreeBucket();
+      hm_->monitoring_->PrintDFB(filename);
+      hm_->monitoring_->ResetDFB();
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
@@ -382,8 +382,8 @@ void RippleTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+      hm_->monitoring_->PrintAlignedDFB(filename);
+      hm_->monitoring_->ResetAlignedDFB();
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-swap--instance%05d-cycle%04d.json",
@@ -514,7 +514,7 @@ void LoadingTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
       sprintf(filename,
-              "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json",
+              "%s/%s-%s-%s--%s-dib--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
               metadata["name"].c_str(),
@@ -522,8 +522,8 @@ void LoadingTestCase::run() {
               pt_string,
               i,
               cycle);
-      fprintf(stderr, "filename psl %s\n", filename);
-      hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
+      fprintf(stderr, "filename dib %s\n", filename);
+      hm_->monitoring_->PrintDIB(filename);
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-blocks--instance%05d-cycle%04d.json",
@@ -545,8 +545,8 @@ void LoadingTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetDistanceToFreeBucket();
+      hm_->monitoring_->PrintDFB(filename);
+      hm_->monitoring_->ResetDFB();
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-adfb--instance%05d-cycle%04d.json",
@@ -557,8 +557,8 @@ void LoadingTestCase::run() {
               pt_string,
               i,
               cycle);
-      hm_->monitoring_->PrintAlignedDistanceToFreeBucket(filename);
-      hm_->monitoring_->ResetAlignedDistanceToFreeBucket();
+      hm_->monitoring_->PrintAlignedDFB(filename);
+      hm_->monitoring_->ResetAlignedDFB();
 
 
       sprintf(filename,

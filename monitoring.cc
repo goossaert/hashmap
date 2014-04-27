@@ -73,26 +73,26 @@ void Monitoring::PrintClustering(HashMap *hm) {
 
 
 
-uint64_t Monitoring::GetProbingSequenceLengthSearch(uint64_t index) {
+uint64_t Monitoring::GetDIB(uint64_t index) {
   std::map<uint64_t, uint64_t>::iterator it;
-  it = psl_search_.find(index);
-  if (it == psl_search_.end()) {
+  it = dib_.find(index);
+  if (it == dib_.end()) {
     return num_buckets_;
   }
-  return psl_search_[index];
+  return dib_[index];
 }
 
 
-void Monitoring::SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl) {
-  psl_search_[index] = psl;
+void Monitoring::SetDIB(uint64_t index, uint64_t dib) {
+  dib_[index] = dib;
   //fprintf(stderr, "SetPSL [%" PRIu64 "]\n", index);
 }
 
-void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
+void Monitoring::RemoveDIB(uint64_t index) {
   std::map<uint64_t, uint64_t>::iterator it;
-  it = psl_search_.find(index);
-  if (it != psl_search_.end()) {
-    psl_search_.erase(it);
+  it = dib_.find(index);
+  if (it != dib_.end()) {
+    dib_.erase(it);
   } else {
     //fprintf(stderr, "RemovePSL error: cannot find index [%" PRIu64 "]\n", index); 
   }
@@ -103,18 +103,18 @@ void Monitoring::RemoveProbingSequenceLengthSearch(uint64_t index) {
 
 
 
-void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
+void Monitoring::PrintDIB(std::string filepath) {
   std::map<uint64_t, uint64_t> counts;
-  std::map<uint64_t, uint64_t>::iterator it_psl, it_count, it_find;
+  std::map<uint64_t, uint64_t>::iterator it_dib, it_count, it_find;
 
-  fprintf(stderr, "psl search size:%zu\n", psl_search_.size());
+  fprintf(stderr, "dib search size:%zu\n", dib_.size());
 
-  for (it_psl = psl_search_.begin(); it_psl != psl_search_.end(); it_psl++) {
-    it_find = counts.find(it_psl->second);
+  for (it_dib = dib_.begin(); it_dib != dib_.end(); it_dib++) {
+    it_find = counts.find(it_dib->second);
     if (it_find == counts.end()) {
-      counts[it_psl->second] = 0;
+      counts[it_dib->second] = 0;
     }
-    counts[it_psl->second] += 1;
+    counts[it_dib->second] += 1;
   }
 
   FILE* fd = NULL;
@@ -222,7 +222,7 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
 
 
 
-void Monitoring::AddDistanceToFreeBucket(uint64_t distance) {
+void Monitoring::AddDFB(uint64_t distance) {
                                             
   std::map<uint64_t, uint64_t>::iterator it;
   it = dfb_.find(distance);
@@ -233,12 +233,12 @@ void Monitoring::AddDistanceToFreeBucket(uint64_t distance) {
 }
 
 
-void Monitoring::ResetDistanceToFreeBucket() {
+void Monitoring::ResetDFB() {
   dfb_.clear();
 }
 
 
-void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
+void Monitoring::PrintDFB(std::string filepath) {
   std::map<uint64_t, uint64_t>::iterator it;
 
   FILE* fd = NULL;
@@ -269,7 +269,7 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
 }
 
 
-void Monitoring::AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t index_free_bucket) {
+void Monitoring::AddAlignedDFB(uint64_t index_init, uint64_t index_free_bucket) {
   std::map<uint64_t, uint64_t>::iterator it_find;
 
   if (index_init > index_free_bucket) {
@@ -297,12 +297,12 @@ void Monitoring::AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t in
 
 
 
-void Monitoring::ResetAlignedDistanceToFreeBucket() {
+void Monitoring::ResetAlignedDFB() {
   aligned_dfb_.clear();
 }
 
 
-void Monitoring::PrintAlignedDistanceToFreeBucket(std::string filepath) {
+void Monitoring::PrintAlignedDFB(std::string filepath) {
   std::map<uint64_t, uint64_t>::iterator it;
 
   FILE* fd = NULL;
