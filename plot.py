@@ -232,6 +232,8 @@ def plot_robinhood(aggregates):
     matplotlib.rc('font', **font)
 
 
+    numbering_subplots = ['a', 'b', 'c', 'd', 'e']
+
     for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'maximum', 'variance']):
         for index_metric, im in enumerate(aggregates.keys()):
             #if  'probing_sequence_length_search' not in im:
@@ -339,9 +341,9 @@ def plot_robinhood(aggregates):
 
 
                 if 'loading' in it:
-                    ax.set_xlabel('Load factor')
+                    ax.set_xlabel('(%s) Load factor' % numbering_subplots[index_testcase])
                 else:
-                    ax.set_xlabel('Iterations')
+                    ax.set_xlabel('(%s) Iterations' % numbering_subplots[index_testcase])
 
                 if statistic == 'mean':
                     ax.set_ylabel('Mean %s' % im)
