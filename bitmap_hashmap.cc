@@ -164,8 +164,6 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
 
   //fprintf(stderr, "Put() [%s] %" PRIu64 " %" PRIu64 "\n", key.c_str(), index_init, index_empty);
 
-  monitoring_->UpdateNumItemsInBucket(index_init, 1);
-
   return 0;
 }
 
@@ -200,7 +198,6 @@ int BitmapHashMap::Remove(const std::string& key) {
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
     buckets_[index_init].bitmap = buckets_[index_init].bitmap & (~mask);
-    monitoring_->UpdateNumItemsInBucket(index_init, -1);
     monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     return 0;
   }

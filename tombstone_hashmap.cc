@@ -132,7 +132,6 @@ int TombstoneHashMap::Put(const std::string& key, const std::string& value) {
 
   monitoring_->AddDistanceToFreeBucket(i);
   monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
-  monitoring_->UpdateNumItemsInBucket(index_init, 1);
   monitoring_->AddNumberOfSwaps(num_swaps);
 
   return 0;
@@ -186,7 +185,6 @@ int TombstoneHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = DELETED_BUCKET;
-    monitoring_->UpdateNumItemsInBucket(index_init, -1);
     monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     num_buckets_used_ -= 1;
 

@@ -17,54 +17,6 @@ void Monitoring::PrintInfo(FILE* fd, std::string metric) {
   fprintf(fd, " \"cycle\": %" PRIu64 ",\n", cycle_);
 }
 
-uint64_t Monitoring::UpdateNumItemsInBucket(uint64_t index,
-                                            int32_t  increment) {
-  std::map<uint64_t, uint64_t>::iterator it;
-  it = num_items_in_bucket_.find(index);
-  if (it == num_items_in_bucket_.end()) {
-    if(increment > 0) {
-      num_items_in_bucket_[index] = 0;
-    } else {
-      //fprintf(stderr, "UpdateNumItemsInBucket %" PRIu64 " %d -- return 0\n", index, increment);
-      return 0; 
-    }
-  }
-
-  //fprintf(stdout, "UpdateNumItemsInBucket %d %d\n", index, increment);
-
-  uint64_t num_items_new = num_items_in_bucket_[index] + increment;
-  if (num_items_new <= 0) {
-    num_items_in_bucket_.erase(it);
-    return 0;
-  } else {
-    num_items_in_bucket_[index] = num_items_new;
-  }
-  
-  return num_items_new;
-}
-
-
-uint64_t Monitoring::GetNumItemsInBucket(uint64_t index) {
-  return UpdateNumItemsInBucket(index, 0);
-}
-
-
-void Monitoring::GetDensity() {
-  fprintf(stdout, "GetDensity() %zu\n", num_items_in_bucket_.size());
-  density_.clear();
-  std::map<uint64_t, uint64_t>::iterator it;
-  std::map<uint64_t, uint64_t>::iterator it_count;
-  for (it = num_items_in_bucket_.begin(); it != num_items_in_bucket_.end(); ++it) {
-    it_count = density_.find(it->second);
-    if (it_count == density_.end()) {
-      density_[it->second] = 0;
-    }
-    density_[it->second] += 1;
-  }
-  fprintf(stdout, "GetDensity() out %zu\n", density_.size());
-  //return density_;
-}
-
 
 uint64_t** Monitoring::GetClustering(HashMap* hm) {
   // This is a O(n^2) solution, but there is a O(n) one. If this gets too slow,
@@ -119,51 +71,6 @@ void Monitoring::PrintClustering(HashMap *hm) {
   delete[] clustering;
 }
 
-
-
-void Monitoring::PrintDensity(std::string filepath) {
-  printf("Density (number of items colliding inside each bucket):\n");
-  GetDensity();
-  std::map<uint64_t, uint64_t>::const_iterator it;
-  uint64_t count_total = 0;
-  for (it = density_.begin(); it != density_.end(); ++it) {
-    count_total += it->second;
-  }
-  fprintf(stderr, "0\n");
-
-  FILE* fd = NULL;
-  if (filepath == "stdout") {
-    fd = stdout;
-  } else {
-    if ((fd = fopen(filepath.c_str(), "w")) == NULL) {
-      fprintf(stderr, "Could not open file [%s]: %s\n", filepath.c_str(), strerror(errno));
-    }
-    fprintf(stderr, "1\n");
-  }
-
-  fprintf(fd, "{\n");
-  fprintf(stderr, "2\n");
-  PrintInfo(fd, "density");
-  fprintf(stderr, "3\n");
-  fprintf(fd, " \"datapoints\":\n");
-  fprintf(fd, "    {");
-
-  //fprintf(fd, "      \"0\": %" PRIu64, num_buckets_ - count_total);
-  bool first_item = true;
-  for (it = density_.begin(); it != density_.end(); ++it) {
-    if (!first_item) fprintf(fd, ",");
-    first_item = false;
-    fprintf(fd, "\n");
-    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
-  }
-  fprintf(fd, "\n");
-  fprintf(fd, "    }\n");
-  fprintf(fd, "}\n");
-
-  if (filepath != "stdout") {
-    fclose(fd); 
-  }
-}
 
 
 uint64_t Monitoring::GetProbingSequenceLengthSearch(uint64_t index) {
@@ -306,8 +213,6 @@ void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >
 
 
 void Monitoring::PrintNumScannedBlocks(std::string filepath) {
-  // TODO: fix bug that can be reached with:
-  // ./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64
   FILE* fd = NULL;
   if (filepath == "stdout") {
     fd = stdout;
@@ -345,59 +250,6 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
     fclose(fd); 
   }
 }
-
-
-void Monitoring::GetNumSecondaryAccesses(std::map<uint64_t, uint64_t>& out_num_secondary_accesses) {
-
-  std::map<uint64_t, uint64_t>::iterator it, it_find;
-  for (it = density_.begin(); it != density_.end(); ++it) {
-    for (unsigned int i = 1; i <= it->first; i++) {
-      it_find = out_num_secondary_accesses.find(i);
-      if (it_find == out_num_secondary_accesses.end()) {
-        out_num_secondary_accesses[i] = 0;
-      }
-      out_num_secondary_accesses[i] += it->second;
-    }
-  }
-}
-
-
-
-void Monitoring::PrintNumSecondaryAccesses(std::string filepath) {
-  // TODO: fix bug that can be reached with:
-  // ./hashmap --algo shadow --num_buckets 1000000 --size_nh_start 4 --size_nh_end 64
-  FILE* fd = NULL;
-  if (filepath == "stdout") {
-    fd = stdout;
-  } else {
-    fd = fopen(filepath.c_str(), "w");
-  }
-
-  std::map<uint64_t, uint64_t> num_secondary_accesses;
-  GetNumSecondaryAccesses(num_secondary_accesses);
-
-  fprintf(fd, "{\n");
-  PrintInfo(fd, "num_secondary_accesses");
-  fprintf(fd, " \"datapoints\":\n");
-  fprintf(fd, "    {");
-  std::map<uint64_t, uint64_t>::iterator it;
-  bool first_item = true;
-  for (it = num_secondary_accesses.begin(); it != num_secondary_accesses.end(); ++it) {
-    if (!first_item) fprintf(fd, ",");
-    first_item = false;
-    fprintf(fd, "\n");
-    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
-  }
-  fprintf(fd, "\n");
-  fprintf(fd, "    }\n");
-  fprintf(fd, "}\n");
-
-  if (filepath != "stdout") {
-    fclose(fd); 
-  }
-}
-
-
 
 
 

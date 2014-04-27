@@ -155,14 +155,6 @@ void BatchTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-
-      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
-      hm_->monitoring_->PrintDensity(filename);
-
-      //fprintf(stderr, "PrintDensity() out\n");
-      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
-      //hm_->monitoring_->PrintNumScannedBlocks(filename);
-
       sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
@@ -178,17 +170,6 @@ void BatchTestCase::run() {
               i,
               cycle);
       hm_->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename,
-              "%s/%s-%s-%s--%s-secondary--instance%05d-cycle%04d.json",
-              directory_sub.c_str(),
-              testcase.c_str(),
-              metadata["name"].c_str(),
-              metadata["parameters_hashmap_string"].c_str(),
-              pt_string,
-              i,
-              cycle);
-      hm_->monitoring_->PrintNumSecondaryAccesses(filename);
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
@@ -271,11 +252,6 @@ void BatchTestCase::run() {
     hm_->Close();
     fprintf(stderr, "ok\n");
   }
-
-  // testcase-algo-metric-runnumber-step.json
-  // batch50-shadow-density-00001-0001.json
-  //hm_->monitoring_->PrintDensity("density.json");
-  //hm_->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 }
 
 
@@ -370,15 +346,6 @@ void RippleTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseString(pt_string);
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
-
-
-      sprintf(filename, "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
-      hm_->monitoring_->PrintDensity(filename);
-
-      fprintf(stderr, "PrintDensity() out\n");
-      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
-      //hm->monitoring_->PrintNumScannedBlocks(filename);
-
       sprintf(filename, "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json", directory_sub.c_str(), testcase.c_str(), metadata["name"].c_str(), metadata["parameters_hashmap_string"].c_str(), pt_string, i, cycle);
       fprintf(stderr, "filename psl %s\n", filename);
       hm_->monitoring_->PrintProbingSequenceLengthSearch(filename);
@@ -393,17 +360,6 @@ void RippleTestCase::run() {
               i,
               cycle);
       hm_->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename,
-              "%s/%s-%s-%s--%s-secondary--instance%05d-cycle%04d.json",
-              directory_sub.c_str(),
-              testcase.c_str(),
-              metadata["name"].c_str(),
-              metadata["parameters_hashmap_string"].c_str(),
-              pt_string,
-              i,
-              cycle);
-      hm_->monitoring_->PrintNumSecondaryAccesses(filename);
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
@@ -477,13 +433,6 @@ void RippleTestCase::run() {
     hm_->Close();
     fprintf(stderr, "ok\n");
   }
-
-
-
-  // testcase-algo-metric-runnumber-step.json
-  // batch50-shadow-density-00001-0001.json
-  //hm_->monitoring_->PrintDensity("density.json");
-  //hm_->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 }
 
 
@@ -565,21 +514,6 @@ void LoadingTestCase::run() {
       hm_->monitoring_->SetParametersTestcaseJson(pt_json);
 
       sprintf(filename,
-              "%s/%s-%s-%s--%s-density--instance%05d-cycle%04d.json",
-              directory_sub.c_str(),
-              testcase.c_str(),
-              metadata["name"].c_str(),
-              metadata["parameters_hashmap_string"].c_str(),
-              pt_string,
-              i,
-              cycle);
-      hm_->monitoring_->PrintDensity(filename);
-
-      fprintf(stderr, "PrintDensity() out\n");
-      //sprintf(filename, "%s/%s-%s-num_scanned_blocks-%05d-%04d.json", testcase.c_str(), testcase.c_str(), metadata["name"].c_str(), i, cycle);
-      //hm->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename,
               "%s/%s-%s-%s--%s-psl--instance%05d-cycle%04d.json",
               directory_sub.c_str(),
               testcase.c_str(),
@@ -601,17 +535,6 @@ void LoadingTestCase::run() {
               i,
               cycle);
       hm_->monitoring_->PrintNumScannedBlocks(filename);
-
-      sprintf(filename,
-              "%s/%s-%s-%s--%s-secondary--instance%05d-cycle%04d.json",
-              directory_sub.c_str(),
-              testcase.c_str(),
-              metadata["name"].c_str(),
-              metadata["parameters_hashmap_string"].c_str(),
-              pt_string,
-              i,
-              cycle);
-      hm_->monitoring_->PrintNumSecondaryAccesses(filename);
 
       sprintf(filename,
               "%s/%s-%s-%s--%s-dfb--instance%05d-cycle%04d.json",
@@ -683,13 +606,6 @@ void LoadingTestCase::run() {
     hm_->Close();
     fprintf(stderr, "ok\n");
   }
-
-
-
-  // testcase-algo-metric-runnumber-step.json
-  // batch50-shadow-density-00001-0001.json
-  //hm_->monitoring_->PrintDensity("density.json");
-  //hm_->monitoring_->PrintNumScannedBlocks("num_scanned_blocks.json");
 }
 
 

@@ -38,16 +38,10 @@ public:
   virtual ~Monitoring() {
   }
 
-  uint64_t UpdateNumItemsInBucket(uint64_t index,
-                                  int32_t increment);
-  uint64_t GetNumItemsInBucket(uint64_t index);
-  void GetDensity();
-  void PrintDensity(std::string filepath);
-
   uint64_t** GetClustering(HashMap* hm);
   void PrintClustering(HashMap *hm);
-
   const std::map<uint64_t, uint64_t>& GetClustering();
+
   uint64_t GetProbingSequenceLengthSearch(uint64_t index);
   void SetProbingSequenceLengthSearch(uint64_t index, uint64_t psl);
   void RemoveProbingSequenceLengthSearch(uint64_t index);
@@ -75,8 +69,6 @@ public:
 
   void GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
-  void GetNumSecondaryAccesses(std::map<uint64_t, uint64_t>& out_num_secondary_accesses);
-  void PrintNumSecondaryAccesses(std::string filepath);
   void PrintInfo(FILE* fd, std::string metric);
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
   void SetInstance(uint64_t instance) { instance_ = instance; }
@@ -99,7 +91,6 @@ private:
   uint64_t num_buckets_;
   uint64_t max_num_items_in_bucket_;
   uint64_t size_bucket_;
-  std::map<uint64_t, uint64_t> density_;
   std::map<uint64_t, uint64_t> psl_search_;
   std::map<uint64_t, uint64_t> psl_insert_;
   std::map<uint64_t, uint64_t> aligned_psl_insert_;

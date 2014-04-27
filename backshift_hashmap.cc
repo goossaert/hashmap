@@ -122,7 +122,6 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
   monitoring_->AddDistanceToFreeBucket(i);
   monitoring_->AddAlignedDistanceToFreeBucket(index_init, index_current);
   monitoring_->AddNumberOfSwaps(num_swaps);
-  monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;
 }

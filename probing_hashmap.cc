@@ -108,8 +108,6 @@ int ProbingHashMap::Put(const std::string& key, const std::string& value) {
   buckets_[index_empty].entry = entry;
   buckets_[index_empty].hash  = hash;
 
-  monitoring_->UpdateNumItemsInBucket(index_init, 1);
-
   return 0;
 }
 
@@ -144,7 +142,6 @@ int ProbingHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = DELETED_BUCKET;
-    monitoring_->UpdateNumItemsInBucket(index_init, -1);
     monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     //fprintf(stderr, "Remove() OK\n");
     return 0;

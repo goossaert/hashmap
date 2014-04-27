@@ -158,7 +158,7 @@ int ShadowHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t index_empty = FindEmptyBucket(index_init);
   // TODO: Put() should use Exists() and perform a replacement if needed.
   if (index_empty == num_buckets_) {
-    return 1; 
+    return 1;
   }
 
   char *data = new char[key.size() + value.size()];
@@ -171,8 +171,6 @@ int ShadowHashMap::Put(const std::string& key, const std::string& value) {
   entry->data = data;
   buckets_[index_empty].entry = entry;
   buckets_[index_empty].hash = hash;
-
-  monitoring_->UpdateNumItemsInBucket(index_init, 1);
 
   return 0;
 }
@@ -202,7 +200,6 @@ int ShadowHashMap::Remove(const std::string& key) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
     buckets_[index_current].entry = NULL;
-    monitoring_->UpdateNumItemsInBucket(index_init, -1);
     monitoring_->RemoveProbingSequenceLengthSearch(index_current);
     return 0;
   }
