@@ -245,7 +245,23 @@ def plot_robinhood(aggregates):
                 lines = []
                 names = []
 
-                for ia in sorted(aggregates[im][it].keys()):
+                # manually sorting the algorithms based on their names, so that they
+                # appear ordered in the legend
+                algorithms = range(5)
+                for ia in aggregates[im][it].keys():
+                    if 'linear' in ia:
+                        algorithms[0] = ia
+                    elif 'backshift' in ia:
+                        algorithms[1] = ia
+                    elif 'tombstone' in ia:
+                        algorithms[2] = ia
+                    elif 'shadow' in ia:
+                        algorithms[3] = ia
+                    elif 'bitmap' in ia:
+                        algorithms[4] = ia
+
+                for ia in algorithms:
+                #for ia in sorted(aggregates[im][it].keys()):
                     #if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
                     #  #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
                     #    v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
