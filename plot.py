@@ -75,6 +75,17 @@ def compute_median(datapoints, has_shift):
 
 
 
+def convert_datapoints_to_powers_of_2(datapoints):
+    out = {}
+    for k, v in datapoints.items():
+        out[2 ** int(k)] = v
+    print 'convert power of 2'
+    pprint.pprint(datapoints)
+    pprint.pprint(out)
+    print '-' * 64
+    return out
+
+
 
 def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
     print testcases, algorithms, shifts
@@ -113,6 +124,13 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
                     #pprint.pprint( data)
                     average, variance, stddev = compute_average(data['datapoints'], has_shift)
                     median, perc95, maximum = compute_median(data['datapoints'], has_shift)
+
+                    #if 'aligned' in data['metric']:
+                    #    datapoints_converted = convert_datapoints_to_powers_of_2(data['datapoints'])
+                    #    average_dummy, variance, stddev_dummy = compute_average(datapoints_converted, has_shift)
+                    #    print 'variance'
+                    #    pprint.pprint(variance)
+
                     #print "average %f" % (avg)
                     ia = data['algorithm']
                     im = data['metric']
@@ -319,7 +337,7 @@ def plot_robinhood(aggregates):
                     ax.set_ylabel('Variance of %s' % im)
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,180))
+                        plt.axis((x1,x2,0,600))
                 elif statistic == 'standard_deviation':
                     ax.set_ylabel('Standard deviation of %s' % im)
                 elif statistic == 'median':
