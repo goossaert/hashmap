@@ -206,7 +206,7 @@ def randomized_paired_sample_t_test(reference, candidate, details):
 
 def plot_robinhood(aggregates):
 
-    colors = {'red': '#cd7058', 'blue': '#599ad3', 'orange': '#f9a65a'}
+    colors = {'red': '#cd7058', 'blue': '#599ad3', 'orange': '#f9a65a', 'green': '#66cc66', 'black': '#000000', 'purple': '#990066'}
 
     font = {'family' : 'normal',
             'weight' : 'normal',
@@ -248,8 +248,8 @@ def plot_robinhood(aggregates):
                                 'linear':    { 'color': colors['blue'],   'name': 'Linear probing',              'linewidth': 8, 'zorder': 1 },
                                 'backshift': { 'color': colors['orange'], 'name': 'Robin Hood (backward shift)', 'linewidth': 6, 'zorder': 2 },
                                 'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4.5, 'zorder': 3 },
-                                'shadow':    { 'color': '#000000',        'name': 'Hopscotch (shadow)',          'linewidth': 3, 'zorder': 4 },
-                                'bitmap':    { 'color': '#a3a3a3',        'name': 'Hopscotch (bitmap)',          'linewidth': 1.75, 'zorder': 5 },
+                                'shadow':    { 'color': colors['green'],  'name': 'Hopscotch (shadow)',          'linewidth': 3, 'zorder': 4 },
+                                'bitmap':    { 'color': colors['black'],  'name': 'Hopscotch (bitmap)',          'linewidth': 1.75, 'zorder': 5 },
                               }
 
                     name = '[ERROR: unknown algorithm]'
@@ -336,7 +336,7 @@ def plot_robinhood(aggregates):
                     ax.set_ylabel('Maximum DIB')
                     if True or 'loading' not in it:
                         x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,100))
+                        plt.axis((x1,x2,0,180))
                 #plt.title('%s of %s over %s' % (statistic, im, it))
                 plt.title('Test case: %s' % (it.strip('-')))
                 plt.legend(lines, names, loc='upper left', prop={'size':12})
@@ -347,9 +347,9 @@ def plot_robinhood(aggregates):
                 fig.set_size_inches(5, 3.75)
                 ax.grid(True)
                 
-                if any(metric in im for metric in ['blocks', 'aligned_distance']):
-                    labels=['1', '8', '16', '32', '64', '128', '256', '512', '1024', '2048', '4096', '8192', '16384', '32768', '65536', '131072']
-                    plt.axis((x1,x2,0,len(labels)))
+                if any(metric in im for metric in ['blocks', 'aligned_']):
+                    labels=['8 B', '16 B', '32 B', '64 B', '128 B', '256 B', '512 B', '1 KB', '2 KB', '4 KB', '8 KB', '16 KB', '32 KB', '64 KB', '128 KB']
+                    plt.axis((x1,x2,1,len(labels)))
                     ax.set_yticks(range(len(labels)))
                     plt.legend(lines, names, loc='upper left', prop={'size':1})
                     ax.set_yticklabels(labels)

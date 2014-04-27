@@ -67,7 +67,7 @@ public:
   void ResetNumberOfSwaps();
   void PrintNumberOfSwaps(std::string filepath);
 
-  void GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm);
+  void GetNumScannedBlocks(std::map<uint64_t, uint64_t>& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
   void PrintInfo(FILE* fd, std::string metric);
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
@@ -92,8 +92,8 @@ private:
   uint64_t max_num_items_in_bucket_;
   uint64_t size_bucket_;
   std::map<uint64_t, uint64_t> psl_search_;
-  std::map<uint64_t, uint64_t> psl_insert_;
-  std::map<uint64_t, uint64_t> aligned_psl_insert_;
+  std::map<uint64_t, uint64_t> dfb_;
+  std::map<uint64_t, uint64_t> aligned_dfb_;
   std::map<uint64_t, uint64_t> dmb_;
   std::map<uint64_t, uint64_t> aligned_dmb_;
   std::map<uint64_t, uint64_t> swaps_;

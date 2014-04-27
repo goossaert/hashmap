@@ -125,7 +125,7 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "probing_sequence_length_search");
+  PrintInfo(fd, "dib");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -146,66 +146,41 @@ void Monitoring::PrintProbingSequenceLengthSearch(std::string filepath) {
 }
 
 
-/*
-void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm) {
-  int size_blocks[6] = { 1, 8, 16, 32, 64, 128 };
+
+void Monitoring::GetNumScannedBlocks(std::map<uint64_t, uint64_t>& out_num_scanned_blocks, HashMap *hm) {
 
   std::map< uint64_t, uint64_t>::iterator it_find;
   for (uint64_t index_stored = 0; index_stored < num_buckets_; index_stored++) {
     uint64_t index_init;
-    for (int i = 0; i < 6; i++) {
-      // OPTIMIZE: offset_end is being recomputed and doesn't need to
-      uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
-      if (hm->FillInitIndex(index_stored, &index_init) != 0) continue;
-      uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
-      uint64_t offset_stored = AlignOffsetToBlock(index_stored * size_bucket_, size_blocks[i]);
-      uint64_t num_blocks;
-      if (offset_init <= offset_stored) {
-        num_blocks = offset_stored - offset_init;
-      } else {
-        num_blocks = offset_end - offset_init + offset_stored;
-      }
-      it_find = out_num_scanned_blocks[i].find(num_blocks);
-      if (it_find == out_num_scanned_blocks[i].end()) {
-        out_num_scanned_blocks[i][num_blocks] = 0;
-      }
-      out_num_scanned_blocks[i][num_blocks] += 1;
+    if (hm->FillInitIndex(index_stored, &index_init) != 0) continue;
+
+    uint64_t index_stored_adjusted;
+    if (index_init <= index_stored) {
+      index_stored_adjusted = index_stored;
+    } else {
+      index_stored_adjusted = index_stored + num_buckets_;
     }
-  }
-}
-*/
 
+    //for (int i = 10; i > 0; i--) {
+    int index_selected = 63;
+    uint64_t chunk_size = 8;
+    for (int i = 1; i < 63; i++) {
+      uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
+      uint64_t offset_stored = AlignOffsetToBlock(index_stored_adjusted * size_bucket_, chunk_size);
 
-void Monitoring::GetNumScannedBlocks(std::vector< std::map<uint64_t, uint64_t> >& out_num_scanned_blocks, HashMap *hm) {
-  int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-
-  std::map< uint64_t, uint64_t>::iterator it_find;
-  for (uint64_t index_stored = 0; index_stored < num_buckets_; index_stored++) {
-    uint64_t index_init;
-    int index_selected = 10;
-    for (int i = 10; i > 0; i--) {
-      // OPTIMIZE: offset_end is being recomputed and doesn't need to
-      uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
-      if (hm->FillInitIndex(index_stored, &index_init) != 0) continue;
-      uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
-      uint64_t offset_stored = AlignOffsetToBlock(index_stored * size_bucket_, size_blocks[i]);
-      int num_bytes;
-      if (offset_init <= offset_stored) {
-        num_bytes = offset_stored - offset_init;
-      } else {
-        num_bytes = offset_end - offset_init + offset_stored;
-      }
-      if (num_bytes > 0) {
+      if (offset_init == offset_stored) {
+        index_selected = i;
         break;
       }
-      index_selected = i;
+
+      chunk_size *= 2;
     }
 
-    it_find = out_num_scanned_blocks[0].find(index_selected);
-    if (it_find == out_num_scanned_blocks[0].end()) {
-      out_num_scanned_blocks[0][index_selected] = 0;
+    it_find = out_num_scanned_blocks.find(index_selected);
+    if (it_find == out_num_scanned_blocks.end()) {
+      out_num_scanned_blocks[index_selected] = 0;
     }
-    out_num_scanned_blocks[0][index_selected] += 1;
+    out_num_scanned_blocks[index_selected] += 1;
   }
 }
 
@@ -219,33 +194,27 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
   } else {
     fd = fopen(filepath.c_str(), "w");
   }
-  fprintf(fd, "[\n");
 
   char metric[1024];
-  std::vector< std::map<uint64_t, uint64_t> > num_scanned_blocks(1);
+  std::map<uint64_t, uint64_t> num_scanned_blocks;
   GetNumScannedBlocks(num_scanned_blocks, hm_);
-  int size_blocks[1] = { 1 };//, 8, 16, 32, 64, 128 };
-  for (int i = 0; i < 1; i++) {
-    if (i > 0) fprintf(fd, ",");
-    fprintf(fd, "{\n");
-    sprintf(metric, "num_scanned_blocks_%d", size_blocks[i]);
-    PrintInfo(fd, metric);
-    fprintf(fd, " \"datapoints\":\n");
-    fprintf(fd, "    {");
-    std::map<uint64_t, uint64_t>::iterator it;
-    bool first_item = true;
-    for (it = num_scanned_blocks[i].begin(); it != num_scanned_blocks[i].end(); ++it) {
-      if (!first_item) fprintf(fd, ",");
-      first_item = false;
-      fprintf(fd, "\n");
-      fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
-    }
+  fprintf(fd, "{\n");
+  sprintf(metric, "aligned_dib");
+  PrintInfo(fd, metric);
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {");
+  std::map<uint64_t, uint64_t>::iterator it;
+  bool first_item = true;
+  for (it = num_scanned_blocks.begin(); it != num_scanned_blocks.end(); ++it) {
+    if (!first_item) fprintf(fd, ",");
+    first_item = false;
     fprintf(fd, "\n");
-    fprintf(fd, "    }\n");
-    fprintf(fd, "}\n");
+    fprintf(fd, "      \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
   }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
 
-  fprintf(fd, "]\n");
   if (filepath != "stdout") {
     fclose(fd); 
   }
@@ -256,16 +225,16 @@ void Monitoring::PrintNumScannedBlocks(std::string filepath) {
 void Monitoring::AddDistanceToFreeBucket(uint64_t distance) {
                                             
   std::map<uint64_t, uint64_t>::iterator it;
-  it = psl_insert_.find(distance);
-  if (it == psl_insert_.end()) {
-      psl_insert_[distance] = 0;
+  it = dfb_.find(distance);
+  if (it == dfb_.end()) {
+      dfb_[distance] = 0;
   }
-  psl_insert_[distance] += 1;
+  dfb_[distance] += 1;
 }
 
 
 void Monitoring::ResetDistanceToFreeBucket() {
-  psl_insert_.clear();
+  dfb_.clear();
 }
 
 
@@ -280,12 +249,12 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "distance_free_bucket");
+  PrintInfo(fd, "dfb");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
   bool first_item = true;
-  for (it = psl_insert_.begin(); it != psl_insert_.end(); it++) {
+  for (it = dfb_.begin(); it != dfb_.end(); it++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
     fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
@@ -301,38 +270,35 @@ void Monitoring::PrintDistanceToFreeBucket(std::string filepath) {
 
 
 void Monitoring::AddAlignedDistanceToFreeBucket(uint64_t index_init, uint64_t index_free_bucket) {
-  int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };//, 
   std::map<uint64_t, uint64_t>::iterator it_find;
-  int index_selected = 10;
-  for (int i = 10; i > 0; i--) {
-    uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
-    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
-    uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, size_blocks[i]);
-    int num_bytes;
-    if (offset_init <= offset_stored) {
-      num_bytes = offset_stored - offset_init;
-    } else {
-      num_bytes = offset_end - offset_init + offset_stored;
-    }
 
-    if (num_bytes > 0) {
-      //printf("index_init: %" PRIu64 " index_fb: %" PRIu64 " | num_bytes: %d offset_init: %" PRIu64 " offset_stored: %" PRIu64 " size_block: %d\n", index_init, index_free_bucket, num_bytes, offset_init, offset_stored, size_blocks[index_selected]);
+  if (index_init > index_free_bucket) {
+    index_free_bucket += num_buckets_;
+  }
+  int index_selected = 63;
+  uint64_t chunk_size = 8;
+  for (int i = 1; i < 63; i++) {
+    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
+    uint64_t offset_free_bucket = AlignOffsetToBlock(index_free_bucket * size_bucket_, chunk_size);
+    if (offset_init == offset_free_bucket) {
+      index_selected = i;
       break;
     }
-    index_selected = i;
+
+    chunk_size *= 2;
   }
 
-  it_find = aligned_psl_insert_.find(index_selected);
-  if (it_find == aligned_psl_insert_.end()) {
-    aligned_psl_insert_[index_selected] = 0;
+  it_find = aligned_dfb_.find(index_selected);
+  if (it_find == aligned_dfb_.end()) {
+    aligned_dfb_[index_selected] = 0;
   }
-  aligned_psl_insert_[index_selected] += 1;
+  aligned_dfb_[index_selected] += 1;
 }
 
 
 
 void Monitoring::ResetAlignedDistanceToFreeBucket() {
-  aligned_psl_insert_.clear();
+  aligned_dfb_.clear();
 }
 
 
@@ -347,12 +313,12 @@ void Monitoring::PrintAlignedDistanceToFreeBucket(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "aligned_distance_to_free_bucket");
+  PrintInfo(fd, "aligned_dfb");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
   bool first_item = true;
-  for (it = aligned_psl_insert_.begin(); it != aligned_psl_insert_.end(); it++) {
+  for (it = aligned_dfb_.begin(); it != aligned_dfb_.end(); it++) {
     if (!first_item) fprintf(fd, ",\n");
     first_item = false;
     fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
@@ -449,7 +415,7 @@ void Monitoring::PrintDMB(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "distance_to_missing_bucket");
+  PrintInfo(fd, "dmb");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
@@ -471,36 +437,22 @@ void Monitoring::PrintDMB(std::string filepath) {
 
 
 
-void Monitoring::AddAlignedDMB(uint64_t index_init, uint64_t index_free_bucket) {
-  int size_blocks[11] = { 1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-  uint64_t powerOf2 = 8;
+void Monitoring::AddAlignedDMB(uint64_t index_init, uint64_t index_missing_bucket) {
   std::map<uint64_t, uint64_t>::iterator it_find;
-  if (index_init > index_free_bucket) {
-    index_free_bucket += num_buckets_ * size_bucket_;
+  if (index_init > index_missing_bucket) {
+    index_missing_bucket += num_buckets_;
   }
   int index_selected = 63;
+  uint64_t chunk_size = 8;
   for (int i = 1; i < 63; i++) {
-    //uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, size_blocks[i]);
-    //uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, size_blocks[i]);
-    //uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, size_blocks[i]);
-
-    uint64_t offset_end = AlignOffsetToBlock(num_buckets_ * size_bucket_, powerOf2);
-    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, powerOf2);
-    uint64_t offset_stored = AlignOffsetToBlock(index_free_bucket * size_bucket_, powerOf2);
-
-    //int num_bytes;
-    //if (offset_init <= offset_stored) {
-    //  num_bytes = offset_stored - offset_init;
-    //} else {
-    //  num_bytes = offset_end - offset_init + offset_stored;
-    //}
-
-    if (offset_init == offset_stored) {
+    uint64_t offset_init = AlignOffsetToBlock(index_init * size_bucket_, chunk_size);
+    uint64_t offset_missing_bucket = AlignOffsetToBlock(index_missing_bucket * size_bucket_, chunk_size);
+    if (offset_init == offset_missing_bucket) {
       index_selected = i;
       break;
     }
 
-    powerOf2 *= 2;
+    chunk_size *= 2;
   }
 
   it_find = aligned_dmb_.find(index_selected);
@@ -530,7 +482,7 @@ void Monitoring::PrintAlignedDMB(std::string filepath) {
   }
 
   fprintf(fd, "{\n");
-  PrintInfo(fd, "aligned_distance_to_missing_bucket");
+  PrintInfo(fd, "aligned_dmb");
   fprintf(fd, " \"datapoints\":\n");
   fprintf(fd, "    {\n");
 
