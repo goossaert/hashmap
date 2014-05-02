@@ -142,6 +142,10 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
 
                     it = data['testcase']
                     ip = data['parameters_testcase_string']
+                    if '75' in ip:
+                        print "before", ip
+                        ip = ip.replace('lfm0.75', 'lfm0.80')
+                        print "after", ip
                     it = '%s-%s' % (it, ip)
                     if im not in aggregate:
                         aggregate[im] = {}
@@ -249,7 +253,7 @@ def plot_robinhood(aggregates):
 
                 # manually sorting the algorithms based on their names, so that they
                 # appear ordered in the legend
-                algorithms = range(5)
+                algorithms = [None] * 5
                 for ia in aggregates[im][it].keys():
                     if 'linear' in ia:
                         algorithms[0] = ia
@@ -263,6 +267,7 @@ def plot_robinhood(aggregates):
                         algorithms[4] = ia
 
                 for ia in algorithms:
+                    if ia is None: continue
                 #for ia in sorted(aggregates[im][it].keys()):
                     #if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
                     #  #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
@@ -270,6 +275,8 @@ def plot_robinhood(aggregates):
                     #    v2 = any(algo in ia for algo in ['linear', 'tombstone', 'backshift'])
                     #    print "skip [%s] - %s %s" % (ia, v1, v2)
                     #    continue
+
+                    print "stats:%s | metric:%s | testcase:%s | algorithm:%s" % (statistic, im, it, ia)
 
                     xs = []
                     ys = []
@@ -337,7 +344,6 @@ def plot_robinhood(aggregates):
                     lines.append(line_current)
 
 
-                print "%s | %s | %s" % (statistic, im, it)
 
 
                 if 'loading' in it:

@@ -231,6 +231,32 @@ void BatchTestCase::run() {
       hm_->monitoring_->PrintAlignedDMB(filename);
       hm_->monitoring_->ResetAlignedDMB();
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDSB(filename);
+      hm_->monitoring_->ResetDSB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-adsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDSB(filename);
+      hm_->monitoring_->ResetAlignedDSB();
+
+
+
       for (uint32_t index_del = 0; index_del < num_items_small; index_del++) {
         uint64_t r = rand();
         uint64_t offset = r % keys.size();
@@ -421,6 +447,31 @@ void RippleTestCase::run() {
       hm_->monitoring_->PrintAlignedDMB(filename);
       hm_->monitoring_->ResetAlignedDMB();
 
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDSB(filename);
+      hm_->monitoring_->ResetDSB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-adsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDSB(filename);
+      hm_->monitoring_->ResetAlignedDSB();
+
+
 
 
 
@@ -596,6 +647,31 @@ void LoadingTestCase::run() {
               cycle);
       hm_->monitoring_->PrintAlignedDMB(filename);
       hm_->monitoring_->ResetAlignedDMB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-dsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintDSB(filename);
+      hm_->monitoring_->ResetDSB();
+
+      sprintf(filename,
+              "%s/%s-%s-%s--%s-adsb--instance%05d-cycle%04d.json",
+              directory_sub.c_str(),
+              testcase.c_str(),
+              metadata["name"].c_str(),
+              metadata["parameters_hashmap_string"].c_str(),
+              pt_string,
+              i,
+              cycle);
+      hm_->monitoring_->PrintAlignedDSB(filename);
+      hm_->monitoring_->ResetAlignedDSB();
+
 
 
 

@@ -69,6 +69,15 @@ public:
 
   void GetNumScannedBlocks(std::map<uint64_t, uint64_t>& out_num_scanned_blocks, HashMap *hm);
   void PrintNumScannedBlocks(std::string filepath);
+
+  void AddDSB(uint64_t distance);
+  void ResetDSB();
+  void PrintDSB(std::string filepath);
+  
+  void AddAlignedDSB(uint64_t index_stored, uint64_t index_shift_bucket);
+  void ResetAlignedDSB();
+  void PrintAlignedDSB(std::string filepath);
+
   void PrintInfo(FILE* fd, std::string metric);
   void SetCycle(uint64_t cycle) { cycle_ = cycle; }
   void SetInstance(uint64_t instance) { instance_ = instance; }
@@ -96,6 +105,8 @@ private:
   std::map<uint64_t, uint64_t> aligned_dfb_;
   std::map<uint64_t, uint64_t> dmb_;
   std::map<uint64_t, uint64_t> aligned_dmb_;
+  std::map<uint64_t, uint64_t> dsb_;
+  std::map<uint64_t, uint64_t> aligned_dsb_;
   std::map<uint64_t, uint64_t> swaps_;
   HashMap *hm_;
   uint64_t cycle_;

@@ -503,10 +503,118 @@ void Monitoring::PrintAlignedDMB(std::string filepath) {
 
 
 
+void Monitoring::AddDSB(uint64_t distance) {
+                                            
+  std::map<uint64_t, uint64_t>::iterator it;
+  it = dsb_.find(distance);
+  if (it == dsb_.end()) {
+      dsb_[distance] = 0;
+  }
+  dsb_[distance] += 1;
+  //printf("Add DSB %" PRIu64 "\n", distance);
+}
+
+
+void Monitoring::ResetDSB() {
+  dsb_.clear();
+}
+
+
+void Monitoring::PrintDSB(std::string filepath) {
+  std::map<uint64_t, uint64_t>::iterator it;
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "DSB");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {\n");
+
+  bool first_item = true;
+  for (it = dsb_.begin(); it != dsb_.end(); it++) {
+    if (!first_item) fprintf(fd, ",\n");
+    first_item = false;
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
+
+  if (filepath != "stdout") {
+    fclose(fd);
+  }
+}
 
 
 
 
+void Monitoring::AddAlignedDSB(uint64_t index_stored, uint64_t index_shift_bucket) {
+  std::map<uint64_t, uint64_t>::iterator it_find;
+  if (index_stored > index_shift_bucket) {
+    index_shift_bucket += num_buckets_;
+  }
+  int index_selected = 64;
+  uint64_t chunk_size = 16;
+  for (int i = 4; i < 64; i++) {
+    uint64_t offset_stored = AlignOffsetToBlock(index_stored * size_bucket_, chunk_size);
+    uint64_t offset_shift_bucket = AlignOffsetToBlock(index_shift_bucket * size_bucket_, chunk_size);
+    if (offset_stored == offset_shift_bucket) {
+      index_selected = i;
+      break;
+    }
 
+    chunk_size *= 2;
+  }
+
+  it_find = aligned_dsb_.find(index_selected);
+  if (it_find == aligned_dsb_.end()) {
+    aligned_dsb_[index_selected] = 0;
+  }
+  aligned_dsb_[index_selected] += 1;
+
+}
+
+
+
+
+void Monitoring::ResetAlignedDSB() {
+  aligned_dsb_.clear();
+}
+
+
+void Monitoring::PrintAlignedDSB(std::string filepath) {
+  std::map<uint64_t, uint64_t>::iterator it;
+
+  FILE* fd = NULL;
+  if (filepath == "stdout") {
+    fd = stdout;
+  } else {
+    fd = fopen(filepath.c_str(), "w");
+  }
+
+  fprintf(fd, "{\n");
+  PrintInfo(fd, "aligned DSB");
+  fprintf(fd, " \"datapoints\":\n");
+  fprintf(fd, "    {\n");
+
+  bool first_item = true;
+  for (it = aligned_dsb_.begin(); it != aligned_dsb_.end(); it++) {
+    if (!first_item) fprintf(fd, ",\n");
+    first_item = false;
+    fprintf(fd, "     \"%" PRIu64 "\": %" PRIu64, it->first, it->second);
+  }
+  fprintf(fd, "\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "}\n");
+
+  if (filepath != "stdout") {
+    fclose(fd);
+  }
+}
 
 }; // end namespace hashmap

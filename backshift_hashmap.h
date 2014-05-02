@@ -82,15 +82,6 @@ private:
   }
 
   uint64_t probing_max_;
-
-  void UpdateInitDistance(uint64_t distance, int32_t increment);
-  void UpdateMinMaxInitDistance();
-  std::map<uint64_t, uint64_t> distances_;
-  uint64_t init_distance_min_;
-  uint64_t init_distance_max_;
-
-
-
 };
 
 

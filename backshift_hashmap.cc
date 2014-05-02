@@ -7,8 +7,6 @@ int BackshiftHashMap::Open() {
   memset(buckets_, 0, sizeof(Bucket) * (num_buckets_));
   monitoring_ = new hashmap::Monitoring(num_buckets_, num_buckets_, static_cast<HashMap*>(this));
   num_buckets_used_ = 0;
-  init_distance_min_ = 0;
-  init_distance_max_ = 0;
   return 0;
 }
 
@@ -22,8 +20,6 @@ int BackshiftHashMap::Close() {
     }
     delete[] buckets_;
   }
-
-  distances_.clear();
 
   if (monitoring_ != NULL) {
     delete monitoring_;
@@ -86,17 +82,16 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
 
   uint64_t index_current = index_init;
   uint64_t probe_distance = 0;
-  uint64_t probe_current = GetMinInitDistance();
+  uint64_t probe_current = 0;
   BackshiftHashMap::Entry *entry_temp = NULL;
   uint64_t hash_temp = 0;
   uint64_t i;
   int num_swaps = 0;
 
-  for (i = probe_current; i < probing_max_; i++) {
+  for (i = 0; i < probing_max_; i++) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
       monitoring_->SetDIB(index_current, probe_current);
-      //UpdateInitDistance(probe_current, 1);
       buckets_[index_current].entry = entry;
       buckets_[index_current].hash = hash;
       break;
@@ -111,7 +106,6 @@ int BackshiftHashMap::Put(const std::string& key, const std::string& value) {
         entry = entry_temp;
         hash = hash_temp;
         monitoring_->SetDIB(index_current, probe_current);
-        //UpdateInitDistance(probe_current, 1);
         probe_current = probe_distance;
         num_swaps += 1;
       }
@@ -136,29 +130,17 @@ int BackshiftHashMap::Exists(const std::string& key) {
 int BackshiftHashMap::Remove(const std::string& key) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
-  uint64_t probe_distance = 0;
   bool found = false;
   uint64_t index_current;
-  //uint64_t distance_max = GetMaxInitDistance();
 
   for (uint64_t i = 0; i < num_buckets_; i++) {
-  //for (uint64_t i = GetMinInitDistance(); i <= distance_max; i++) {
     index_current = (index_init + i) % num_buckets_;
-
-    FillDistanceToInitIndex(index_current, &probe_distance);
-    if (   buckets_[index_current].entry == NULL) {
-       // || i > probe_distance) {
-      //fprintf(stderr, "Remove() found NULL\n");
+    if (buckets_[index_current].entry == NULL) {
       continue;
     }
-
     if (   key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       found = true;
-      uint64_t mind = GetMinInitDistance();
-      if (i < mind) {
-        fprintf(stderr, "Found at distance %" PRIu64 " and min at %" PRIu64 "\n", i, GetMinInitDistance());
-      }
       break;
     }
   }
@@ -166,29 +148,32 @@ int BackshiftHashMap::Remove(const std::string& key) {
   if (found) {
     delete[] buckets_[index_current].entry->data;
     delete buckets_[index_current].entry;
-    //buckets_[index_current].entry = NULL;
     monitoring_->RemoveDIB(index_current);
-    for (uint64_t i = 1; i < num_buckets_; i++) {
-      uint64_t prev = (index_current + i - 1) % num_buckets_;
-      uint64_t idx = (index_current + i) % num_buckets_;
-      if (buckets_[idx].entry == NULL) {
-        buckets_[prev].entry = NULL;
-        monitoring_->RemoveDIB(prev);
+    uint64_t i = 1;
+    uint64_t index_previous = 0, index_swap = 0;
+    for (i = 1; i < num_buckets_; i++) {
+      index_previous = (index_current + i - 1) % num_buckets_;
+      index_swap = (index_current + i) % num_buckets_;
+      if (buckets_[index_swap].entry == NULL) {
+        buckets_[index_previous].entry = NULL;
+        monitoring_->RemoveDIB(index_previous);
         break;
       }
-      uint64_t dist;
-      if (FillDistanceToInitIndex(idx, &dist) != 0) {
+      uint64_t distance;
+      if (FillDistanceToInitIndex(index_swap, &distance) != 0) {
         fprintf(stderr, "Error in FillDistanceToInitIndex()"); 
       }
-      if (dist == 0) {
-        buckets_[prev].entry = NULL;
-        monitoring_->RemoveDIB(prev);
+      if (distance == 0) {
+        buckets_[index_previous].entry = NULL;
+        monitoring_->RemoveDIB(index_previous);
         break;
       }
-      buckets_[prev].entry = buckets_[idx].entry;
-      buckets_[prev].hash = buckets_[idx].hash;
-      monitoring_->SetDIB(prev, dist-1);
+      buckets_[index_previous].entry = buckets_[index_swap].entry;
+      buckets_[index_previous].hash = buckets_[index_swap].hash;
+      monitoring_->SetDIB(index_previous, distance-1);
     }
+    monitoring_->AddDSB(i);
+    monitoring_->AddAlignedDSB(index_current, index_swap);
     num_buckets_used_ -= 1;
     return 0;
   }
@@ -252,61 +237,6 @@ void BackshiftHashMap::GetMetadata(std::map< std::string, std::string >& metadat
   metadata["parameters_hashmap"] = buffer;
   sprintf(buffer, "nb%" PRIu64 "-pm%" PRIu64 "", num_buckets_, probing_max_);
   metadata["parameters_hashmap_string"] = buffer;
-}
-
-uint64_t BackshiftHashMap::GetMinInitDistance() {
-  return 0;
-  //return init_distance_min_;
-}
-
-uint64_t BackshiftHashMap::GetMaxInitDistance() {
-  return init_distance_max_;
-}
-
-
-
-void BackshiftHashMap::UpdateMinMaxInitDistance() {
-  init_distance_min_ = 0;
-  init_distance_max_ = 0;
-  if (distances_.size() == 0) return;
-
-  std::map<uint64_t, uint64_t>::iterator it;
-  //fprintf(stderr, "GetMinInitDistance() ----------------------\n");
-
-  init_distance_min_ = std::numeric_limits<uint64_t>::max();
-  init_distance_max_ = 0;
-  for (it = distances_.begin(); it != distances_.end(); ++it) {
-    //fprintf(stderr, "GetMinInitDistance() %" PRIu64 " %" PRIu64 "\n", it->first, it->second);
-    if (it->first < init_distance_min_) {
-      init_distance_min_ = it->first;
-    }
-
-    if (it->first > init_distance_max_) {
-      init_distance_max_ = it->first;
-    }
-  }
-
-  //fprintf(stderr, "GetMaxInitDistance() %" PRIu64 "\n", distances_max);
-}
-
-
-void BackshiftHashMap::UpdateInitDistance(uint64_t distance, int32_t increment) {
-  std::map<uint64_t, uint64_t>::iterator it;
-  it = distances_.find(distance);
-  if (it == distances_.end()) {
-    if (increment > 0) {
-      distances_[distance] = increment;
-      UpdateMinMaxInitDistance();
-    } else {
-      fprintf(stderr, "UpdateInitDistance() neg on not exist %" PRIu64 " %d\n", distance, increment);
-    }
-  } else {
-    distances_[distance] += increment;
-    if (distances_[distance] <= 0) {
-      distances_.erase(it); 
-      UpdateMinMaxInitDistance();
-    }
-  }
 }
 
 }; // end namespace hashmap
