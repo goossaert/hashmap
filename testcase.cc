@@ -99,7 +99,7 @@ void BatchTestCase::run() {
 
 
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 50; i++) {
     
     num_items = num_items_big;
     srand(i);
@@ -147,7 +147,17 @@ void BatchTestCase::run() {
         }
       }
       printf("keys insert %zu\n", keys.size());
-      if (has_error_on_put) break;
+      if (has_error_on_put) {
+        hm_->monitoring_->ResetDFB();
+        hm_->monitoring_->ResetAlignedDFB();
+        hm_->monitoring_->ResetNumberOfSwaps();
+        hm_->monitoring_->ResetDMB();
+        hm_->monitoring_->ResetAlignedDMB();
+        hm_->monitoring_->ResetDSB();
+        hm_->monitoring_->ResetAlignedDSB();
+        num_items = num_items_small;
+        break;
+      }
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);
@@ -307,7 +317,7 @@ void RippleTestCase::run() {
 
 
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 50; i++) {
     num_items = num_items_big;
     srand(i);
     keys.clear();
@@ -364,7 +374,17 @@ void RippleTestCase::run() {
         }
       }
       printf("keys insert %zu\n", keys.size());
-      if (has_error_on_put) break;
+      if (has_error_on_put) {
+        hm_->monitoring_->ResetDFB();
+        hm_->monitoring_->ResetAlignedDFB();
+        hm_->monitoring_->ResetNumberOfSwaps();
+        hm_->monitoring_->ResetDMB();
+        hm_->monitoring_->ResetAlignedDMB();
+        hm_->monitoring_->ResetDSB();
+        hm_->monitoring_->ResetAlignedDSB();
+        num_items = num_items_small;
+        break;
+      }
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);
@@ -511,7 +531,7 @@ void LoadingTestCase::run() {
 
   num_items = num_items_big / 50;
   std::set<std::string>::iterator it_find;
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 50; i++) {
     srand(i);
     keys.clear();
     hm_->Open();
@@ -541,7 +561,6 @@ void LoadingTestCase::run() {
           fprintf(stderr, "Error: key already in the hash table, this should not happen\n");
         }
 
-        keys.insert(key);
         int ret_get = hm_->Get(key, &value_dummy);
         if (ret_get != 1) {
           fprintf(stderr, "Get() error\n");
@@ -554,9 +573,19 @@ void LoadingTestCase::run() {
           has_error_on_put = true;
           break;
         }
+        keys.insert(key);
       }
       printf("keys insert %zu\n", keys.size());
-      if (has_error_on_put) break;
+      if (has_error_on_put) {
+        hm_->monitoring_->ResetDFB();
+        hm_->monitoring_->ResetAlignedDFB();
+        hm_->monitoring_->ResetNumberOfSwaps();
+        hm_->monitoring_->ResetDMB();
+        hm_->monitoring_->ResetAlignedDMB();
+        hm_->monitoring_->ResetDSB();
+        hm_->monitoring_->ResetAlignedDSB();
+        break;
+      }
 
       hm_->monitoring_->SetTestcase(testcase);
       hm_->monitoring_->SetInstance(i);
