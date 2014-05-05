@@ -80,6 +80,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
   }
 
   int num_swaps = 0;
+  uint32_t index_base = 0;
 
   uint64_t index_empty = index_current;
   while (   (index_empty >= index_init && (index_empty - index_init) >= size_neighborhood_)
@@ -90,7 +91,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
     for (uint32_t i = 0; i < size_neighborhood_ - 1; i++) {
       // -1 because no need to test the bucket at index_empty
       // For each mask position
-      uint32_t index_base = (index_base_init + i) % num_buckets_;
+      index_base = (index_base_init + i) % num_buckets_;
       uint32_t mask = 1 << (size_neighborhood_-1);
       for (uint32_t j = 0; j < size_neighborhood_ - i - 1; j++) {
         if (buckets_[index_base].bitmap & mask) {
@@ -118,6 +119,12 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
       if (found_swap) break;
     }
     if (!found_swap) {
+      // This is a dirty hack in case no reordering worked but we already had a
+      // few swaps, we want to avoid having the same entry pointer in two
+      // different buckets, which would make the program crash when freeing
+      // the memory in Close().
+      // This should be changed whenever the Resize() method is implemented.
+      buckets_[index_empty].entry = NULL;
       return num_buckets_;
     }
   }
@@ -161,9 +168,6 @@ int BitmapHashMap::Put(const std::string& key, const std::string& value) {
     mask = 1 << (size_neighborhood_ - ((index_empty + num_buckets_ - index_init) + 1));
   }
   buckets_[index_init].bitmap |= mask; 
-
-  //fprintf(stderr, "Put() [%s] %" PRIu64 " %" PRIu64 "\n", key.c_str(), index_init, index_empty);
-
   return 0;
 }
 
@@ -208,6 +212,10 @@ int BitmapHashMap::Remove(const std::string& key) {
 
 int BitmapHashMap::Resize() {
   // TODO: implement
+  // If the resize is called when FindEmptyBucket() cannot perform
+  // the necessary swaps, then make sure that the item being inserted
+  // or swapped is not nullified and that it is correctly inserted
+  // after the resize.
   return 0;
 }
 
