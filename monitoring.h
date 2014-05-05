@@ -31,8 +31,6 @@ public:
     size_bucket_ = 4;
     hm_ = hm;
     fprintf(stderr, "starting\n");
-    //extra_parameters_ = "blah";
-    //fprintf(stderr, "%s\n", extra_parameters_.c_str());
   }
 
   virtual ~Monitoring() {
