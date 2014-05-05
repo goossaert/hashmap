@@ -1,6 +1,5 @@
 # make the algorithms an argument
 # make the metrics an argument
-# Re-read the "FelixDB Note" file
 
 import os
 import sys
@@ -13,11 +12,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pprint
 
+colors = {'red': '#cd7058', 'blue': '#599ad3', 'orange': '#f9a65a', 'green': '#66cc66', 'black': '#000000', 'purple': '#990066'}
+numbering_subplots = ['a', 'b', 'c', 'd', 'e', 'f']
+
 
 def compute_average(datapoints, has_shift):
     if len(datapoints) == 0:
         return 0, 0, 0
-    #print datapoints
     num_freq = 0
     sum_metric = 0
     if not has_shift:
@@ -51,7 +52,7 @@ def compute_average(datapoints, has_shift):
 
 
 def compute_median(datapoints, has_shift):
-    # TODO: very inefficient, optimize this method
+    # TODO: very inefficient, could optimize this method
     if len(datapoints) == 0:
         return 0, 0, 0
     values = []
@@ -67,34 +68,20 @@ def compute_median(datapoints, has_shift):
 
     if not has_shift: minimum = 0
     values = sorted(values)
-    #print 'median', values
     median = values[len(values) / 2] - minimum
     perc95 = values[int(float(len(values)) * .95)] - minimum
     maximum = values[-1] - minimum
     return median, perc95, maximum
 
 
-
-def convert_datapoints_to_powers_of_2(datapoints):
-    out = {}
-    for k, v in datapoints.items():
-        out[2 ** int(k)] = v
-    print 'convert power of 2'
-    pprint.pprint(datapoints)
-    pprint.pprint(out)
-    print '-' * 64
-    return out
-
-
-
-def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
+def aggregate_datapoints(dirpath_data, testcases, algorithms, shifts):
     print testcases, algorithms, shifts
     aggregate = {}
-    for dirname, dirnames, filenames in os.walk(dirpath):
-        # print path to all filenames.
+    for dirname, dirnames, filenames in os.walk(dirpath_data):
         for filename in filenames:
             basename, ext = os.path.splitext(filename)
             if ext.lower() != '.json': continue
+            if '50000000' in filename: continue
 
             if testcases != 'all' and not any(filename.startswith(testcase) for testcase in testcases.split(',')):
                 print 'skipping ' + filename
@@ -115,23 +102,10 @@ def aggregate_datapoints(dirpath, testcases, algorithms, shifts):
                 if not isinstance(data_items, list):
                     data_items = [data_items]
 
-                #import pprint
-
                 for data in data_items:
-                    #print 'data'
-                    #pprint.pprint( data_items )
-                    #print 'sub'
-                    #pprint.pprint( data)
                     average, variance, stddev = compute_average(data['datapoints'], has_shift)
                     median, perc95, maximum = compute_median(data['datapoints'], has_shift)
 
-                    #if 'aligned' in data['metric']:
-                    #    datapoints_converted = convert_datapoints_to_powers_of_2(data['datapoints'])
-                    #    average_dummy, variance, stddev_dummy = compute_average(datapoints_converted, has_shift)
-                    #    print 'variance'
-                    #    pprint.pprint(variance)
-
-                    #print "average %f" % (avg)
                     ia = data['algorithm']
                     im = data['metric']
                     ib = data['parameters_hashmap_string']
@@ -196,8 +170,6 @@ def randomized_paired_sample_t_test(reference, candidate, details):
 
         mean_new = float(sum(diff_new)) / float(num_items)
         population.append(mean_new)
-        #print 'mean_new %f' % (mean_new)
-        #print diff, diff_new
 
     count_passed = 0
     mean = sum(diff) / num_items
@@ -224,319 +196,207 @@ def randomized_paired_sample_t_test(reference, candidate, details):
     print "passed: %f" % (p_value,)
     return p_value
 
-     
 
-def plot_robinhood(aggregates):
 
-    colors = {'red': '#cd7058', 'blue': '#599ad3', 'orange': '#f9a65a', 'green': '#66cc66', 'black': '#000000', 'purple': '#990066'}
-
+def add_curve_to_plot(ax, aggregates, im, it, index_testcase, statistic, algorithms_ordering, filters, numbering_subplot, includes):
+    names = []
+    lines = []
     font = {'family' : 'normal',
             'weight' : 'normal',
             'size'   : 14}
     matplotlib.rc('font', **font)
 
+    algorithms = [None] * 5
+    for ia in aggregates[im][it].keys():
+        for pattern in algorithms_ordering.keys():
+            if pattern in ia:
+                order = algorithms_ordering[pattern]['order']
+                algorithms[order] = ia
 
-    numbering_subplots = ['a', 'b', 'c', 'd', 'e']
+    for ia in algorithms:
+        if ia is None: continue
+        print "Generating curve for: stats:%s | metric:%s | testcase:%s | algorithm:%s" % (statistic, im, it, ia)
+
+        xs = []
+        ys = []
+
+        for cycle, stats in sorted(aggregates[im][it][ia].items()):
+            if 'loading' in it:
+                xs.append((cycle * 2.0) / 100.0)
+            else:
+                xs.append(cycle)
+            ys.append(sum(stats[statistic]) / len(stats[statistic]))
+
+        name = '[ERROR: unknown algorithm]'
+        color = '#000000'
+        linewidth = 3
+        zorder = 1
+        for k, v in filters.iteritems():
+            if k in ia:
+                name = filters[k]['name']
+                color = filters[k]['color']
+                linewidth = filters[k]['linewidth']
+                style = '-'
+                zorder = filters[k]['zorder']
+                break
+
+        if not any(pattern in ia for pattern in includes):
+            continue
+
+        line_current, = ax.plot(xs, ys, style, color=color, linewidth=linewidth, zorder=zorder)
+        names.append(name)
+        lines.append(line_current)
+
+    if 'loading' in it:
+        ax.set_xlabel('(%s) Load factor' % numbering_subplot)
+    else:
+        ax.set_xlabel('(%s) Iterations' % numbering_subplot)
+
+    if statistic == 'mean':
+        ax.set_ylabel('Mean %s' % im)
+        if True or 'loading' not in it:
+            x1,x2,y1,y2 = plt.axis()
+            plt.axis((x1,x2,0,100))
+    elif statistic == 'variance':
+        ax.set_ylabel('Variance of %s' % im)
+        if True or 'loading' not in it:
+            x1,x2,y1,y2 = plt.axis()
+            plt.axis((x1,x2,0,600))
+    elif statistic == 'standard_deviation':
+        ax.set_ylabel('Standard deviation of %s' % im)
+    elif statistic == 'median':
+        ax.set_ylabel('Median of %s' % im)
+        if True or 'loading' not in it:
+            x1,x2,y1,y2 = plt.axis()
+            plt.axis((x1,x2,0,100))
+    elif statistic == 'perc95':
+        ax.set_ylabel('95th percentile of %s' % im)
+        if True or 'loading' not in it:
+            x1,x2,y1,y2 = plt.axis()
+            plt.axis((x1,x2,0,100))
+    elif statistic == 'maximum':
+        ax.set_ylabel('Maximum %s' % im)
+        if True or 'loading' not in it:
+            x1,x2,y1,y2 = plt.axis()
+            plt.axis((x1,x2,0,180))
+    plt.title('Test case: %s' % (it.strip('-')))
+    ax.grid(True)
+
+    if any(metric in im for metric in ['blocks', 'aligned']) and statistic != 'variance':
+        labels=['16 B', '32 B', '64 B', '128 B', '256 B', '512 B', '1 KB', '2 KB', '4 KB', '8 KB', '16 KB', '32 KB', '64 KB', '128 KB']
+        plt.axis((x1,x2,4,4+len(labels)))
+        ax.set_yticks(range(4,4+len(labels)))
+        ax.set_yticklabels(labels)
+
+    plt.legend(lines, names).set_visible(False)
+    return names, lines
+
+
+     
+def plot_algorithms(aggregates):
 
     for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'maximum', 'variance']):
         for index_metric, im in enumerate(aggregates.keys()):
-            #if  'probing_sequence_length_search' not in im:
-            #    continue 
-            #fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
             fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + 1)
             legend = None
             for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
-                if '0.9' in it: continue
                 ax = fig.add_subplot(2, 2, index_testcase+1)
                 lines = []
                 names = []
 
-                # manually sorting the algorithms based on their names, so that they
-                # appear ordered in the legend
-                algorithms = [None] * 5
-                for ia in aggregates[im][it].keys():
-                    if 'linear' in ia:
-                        algorithms[0] = ia
-                    elif 'backshift' in ia:
-                        algorithms[1] = ia
-                    elif 'tombstone' in ia:
-                        algorithms[2] = ia
-                    elif 'shadow' in ia:
-                        algorithms[3] = ia
-                    elif 'bitmap' in ia:
-                        algorithms[4] = ia
+                names_temp, lines_temp = add_curve_to_plot( 
+                                    ax=ax,
+                                    aggregates=aggregates,
+                                    im=im,
+                                    it=it,
+                                    index_testcase=index_testcase,
+                                    statistic=statistic,
+                                    algorithms_ordering = {
+                                                            'linear': {'order': 0},
+                                                            'backshift': {'order': 1},
+                                                            'tombstone': {'order': 2},
+                                                            'shadow': {'order': 3},
+                                                            'bitmap': {'order': 4},
+                                                          },
+                                    filters = {
+                                                'linear':    { 'color': colors['blue'],   'name': 'Linear probing',              'linewidth': 8,    'zorder': 1 },
+                                                'backshift': { 'color': colors['orange'], 'name': 'Robin Hood (backward shift)', 'linewidth': 6,    'zorder': 2 },
+                                                'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4.5,  'zorder': 3 },
+                                                'shadow':    { 'color': colors['green'],  'name': 'Hopscotch (shadow)',          'linewidth': 3,    'zorder': 4 },
+                                                'bitmap':    { 'color': colors['black'],  'name': 'Hopscotch (bitmap)',          'linewidth': 1.75, 'zorder': 5 },
+                                              },
+                                    numbering_subplot=numbering_subplots[index_testcase],
+                                    includes=['10000-'],
+                                 )
 
-                for ia in algorithms:
-                    if ia is None: continue
-                #for ia in sorted(aggregates[im][it].keys()):
-                    #if   not any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']]):
-                    #  #or not any(algo in ia for algo in ['linear', 'tombstone', 'backshift']):
-                    #    v1 = any(size_str in ia for size_str in ["nb%s-" % (size,) for size in ['10000']])
-                    #    v2 = any(algo in ia for algo in ['linear', 'tombstone', 'backshift'])
-                    #    print "skip [%s] - %s %s" % (ia, v1, v2)
-                    #    continue
+                    
+                names.extend(names_temp)
+                lines.extend(lines_temp)
 
-                    print "stats:%s | metric:%s | testcase:%s | algorithm:%s" % (statistic, im, it, ia)
-
-                    xs = []
-                    ys = []
-
-                    for cycle, stats in sorted(aggregates[im][it][ia].items()):
-                        if 'loading' in it:
-                            xs.append((cycle * 2.0) / 100.0)
-                        else:
-                            xs.append(cycle)
-                        ys.append(sum(stats[statistic]) / len(stats[statistic]))
-
-
-                    filters = {
-                                'linear':    { 'color': colors['blue'],   'name': 'Linear probing',              'linewidth': 8, 'zorder': 1 },
-                                'backshift': { 'color': colors['orange'], 'name': 'Robin Hood (backward shift)', 'linewidth': 6, 'zorder': 2 },
-                                'tombstone': { 'color': colors['red'],    'name': 'Robin Hood (tombstone)',      'linewidth': 4.5, 'zorder': 3 },
-                                'shadow':    { 'color': colors['green'],  'name': 'Hopscotch (shadow)',          'linewidth': 3, 'zorder': 4 },
-                                'bitmap':    { 'color': colors['black'],  'name': 'Hopscotch (bitmap)',          'linewidth': 1.75, 'zorder': 5 },
-                              }
-
-                    name = '[ERROR: unknown algorithm]'
-                    color = '#000000'
-                    linewidth = 3
-                    zorder = 1
-                    for k, v in filters.iteritems():
-                        if k in ia:
-                            name = filters[k]['name']
-                            color = filters[k]['color']
-                            linewidth = filters[k]['linewidth']
-                            style = '-'
-                            zorder = filters[k]['zorder']
-                            break
-
-                    if '10000-' not in ia:
-                        continue
-
-                    if '10000a-' in ia:
-                        name = name + ' (10k)'
-                        style = '-'
-                        linewidth = 8
-                        color = colors['blue']
-                    elif '100000a-' in ia:
-                        name = name + ' (100k)'
-                        style = '-'
-                        linewidth = 6
-                        color = colors['orange']
-                    elif '1000000a-' in ia:
-                        name = name + ' (1M)'
-                        style = '-'
-                        linewidth = 4
-                        color = colors['red']
-                    elif '10000000a-' in ia:
-                        name = name + ' (10M)'
-                        style = '-'
-                        linewidth = 2
-                        color = '#a3a3a3'
-                    elif '100000000a-' in ia:
-                        name = name + ' (100M)'
-                        style = '-'
-                        linewidth = 1
-                        color = '#000000'
-
-                    line_current, = ax.plot(xs, ys, style, color=color, linewidth=linewidth, zorder=zorder)
-                    names.append(name)
-                    lines.append(line_current)
-
-
-
-
-                if 'loading' in it:
-                    ax.set_xlabel('(%s) Load factor' % numbering_subplots[index_testcase])
-                else:
-                    ax.set_xlabel('(%s) Iterations' % numbering_subplots[index_testcase])
-
-                if statistic == 'mean':
-                    ax.set_ylabel('Mean %s' % im)
-                    if True or 'loading' not in it:
-                        x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,100))
-                        #plt.axis((x1,x2,0,40))
-                elif statistic == 'variance':
-                    ax.set_ylabel('Variance of %s' % im)
-                    if True or 'loading' not in it:
-                        x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,600))
-                elif statistic == 'standard_deviation':
-                    ax.set_ylabel('Standard deviation of %s' % im)
-                elif statistic == 'median':
-                    ax.set_ylabel('Median of %s' % im)
-                    if True or 'loading' not in it:
-                        x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,100))
-                        #plt.axis((x1,x2,0,40))
-                elif statistic == 'perc95':
-                    ax.set_ylabel('95th percentile of %s' % im)
-                    if True or 'loading' not in it:
-                        x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,100))
-                        #plt.axis((x1,x2,0,70))
-                elif statistic == 'maximum':
-                    ax.set_ylabel('Maximum %s' % im)
-                    if True or 'loading' not in it:
-                        x1,x2,y1,y2 = plt.axis()
-                        plt.axis((x1,x2,0,180))
-                #plt.title('%s of %s over %s' % (statistic, im, it))
-                plt.title('Test case: %s' % (it.strip('-')))
-                #plt.legend(lines, names, loc='upper left', prop={'size':12})
-                if not os.path.isdir('plots'):
-                    os.mkdir('plots')
-                #fig.set_size_inches(8, 6)
-                #fig.set_size_inches(8.9, 6.5)
-                #reactive fig.set_size_inches(5, 3.75)
-                ax.grid(True)
-
-                if any(metric in im for metric in ['blocks', 'aligned']) and statistic != 'variance':
-                    labels=['16 B', '32 B', '64 B', '128 B', '256 B', '512 B', '1 KB', '2 KB', '4 KB', '8 KB', '16 KB', '32 KB', '64 KB', '128 KB']
-                    plt.axis((x1,x2,4,4+len(labels)))
-                    ax.set_yticks(range(4,4+len(labels)))
-                    #plt.legend(lines, names, loc='upper left', prop={'size':1}).set_visible(False)
-                    ax.set_yticklabels(labels)
-
-                if index_testcase == 3:
-                    legend = plt.legend(lines, names, prop={'size':12}, bbox_to_anchor=(0.2, -0.3))
-                else:
-                    plt.legend(lines, names).set_visible(False)
-
-                
-
-
-                #from matplotlib import rcParams
-                #rcParams.update({'figure.autolayout': True})
-
-                #reactive fig.subplots_adjust(bottom=0.15, left=0.20)
-                #ax.legend().set_visible(False)
-
-                #plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=72)
+            legend = plt.legend(lines, names, prop={'size':12}, bbox_to_anchor=(0.2, -0.3))
+            if not os.path.isdir('plots/algorithms'):
+                os.mkdir('plots/algorithms')
             fig.set_size_inches(10, 7.5)
             plt.tight_layout()
-            plt.savefig('plots/%s_%s.png' % (im.lower(), statistic), dpi=72, bbox_extra_artists=(legend,), bbox_inches='tight')
+            plt.savefig('plots/algorithms/%s_%s.png' % (im.lower(), statistic), dpi=72, bbox_extra_artists=(legend,), bbox_inches='tight')
 
 
 
 
-def plot_aggregates(aggregates):
-    
-    colors = [
-                '#33E6D9',
-                '#FFA600',
-                '#A64B00',
-                '#8CCCF2',
-                '#ED0000',
-                '#A6FF00',
-                '#8C19A3',
-                '#00AAE6',
-                '#5CF22C',
-                '#FF6600',
-                '#806600',
-                '#0057D9'
-             ]
-    for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'variance']):
-        for index_metric, im in enumerate(aggregates.keys()):
-            
-            print 'im', im
-            #if im != 'probing_sequence_length_search': continue
+
+def plot_robinhood(aggregates):
+    for index_metric, im in enumerate(aggregates.keys()):
+        fig = plt.figure((index_metric+1) * 100 + 1)
+        for index_stat, statistic in enumerate(['mean', 'median', 'perc95', 'maximum', 'variance']):
+            ax = fig.add_subplot(3, 2, index_stat+1)
+            lines = []
+            names = []
             for index_testcase, it in enumerate(sorted(aggregates[im].keys())):
-                fig = plt.figure((index_stat+1) * 10000 + (index_metric+1) * 100 + index_testcase + 1)
-                ax = fig.add_subplot(111)
-                lines = []
-                names = []
+                names_temp, lines_temp = add_curve_to_plot( 
+                                    ax=ax,
+                                    aggregates=aggregates,
+                                    im=im,
+                                    it=it,
+                                    index_testcase=index_testcase,
+                                    statistic=statistic,
+                                    algorithms_ordering = {
+                                                            '10000-': {'order': 0},
+                                                            '100000-': {'order': 1},
+                                                            '1000000-': {'order': 2},
+                                                            '10000000-': {'order': 3},
+                                                            '50000000-': {'order': 4},
+                                                          },
+                                    filters = {
+                                                '10000-':     { 'color': colors['blue'],   'name': 'Robin Hood (backward shift, 10k)',  'linewidth': 8, 'zorder': 1 },
+                                                '100000-':    { 'color': colors['orange'], 'name': 'Robin Hood (backward shift, 100k)', 'linewidth': 6, 'zorder': 2 },
+                                                '1000000-':   { 'color': colors['red'],    'name': 'Robin Hood (backward shift, 1M)',   'linewidth': 4.5, 'zorder': 3 },
+                                                '10000000-':  { 'color': colors['green'],  'name': 'Robin Hood (backward shift, 10M)',  'linewidth': 3, 'zorder': 4 },
+                                                '50000000-':  { 'color': colors['black'],   'name': 'Robin Hood (backward shift, 50M)', 'linewidth': 1.75, 'zorder': 5 },
+                                                '100000000-': { 'color': colors['black'],  'name': 'Robin Hood (backward shift, 100M)', 'linewidth': 1.75, 'zorder': 5 },
+                                              },
+                                    numbering_subplot=numbering_subplots[index_stat],
+                                    includes=['backshift'],
+                                 )
+                names.extend(names_temp)
+                lines.extend(lines_temp)
+
+        legend = plt.legend(lines, names, prop={'size':12}, bbox_to_anchor=(2.10, 0.75))
+        fig.set_size_inches(10, 11.25)
+        plt.tight_layout()
+        if not os.path.isdir('plots/robinhood-backshift'):
+            os.mkdir('plots/robinhood-backshift')
+        plt.savefig('plots/robinhood-backshift/%s.png' % (im.lower()), dpi=72, bbox_extra_artists=(legend,), bbox_inches='tight')
 
 
-
-                ia_ref = None
-                for ia in sorted(aggregates[im][it].keys()):
-                    if 'linear' in ia:
-                        ia_ref = ia
-                        break
-                for ia in sorted(aggregates[im][it].keys()):
-                    print 'ia', ia
-                    #if ia != 'linear': continue
-                    xs = []
-                    ys = []
-                    stddevs = []
-                    xs_green = []
-                    ys_green = []
-                    details = True
-                    p_values = []
-                    for key, value in sorted(aggregates[im][it][ia].items()):
-                        if not value:
-                            value = [0]
-                        if ia_ref:
-                            value_ref = aggregates[im][it][ia_ref][key][statistic]
-                        else:
-                            value_ref = None
-                        xs.append(key)
-                        print 'key', key, 'value', value
-                        if statistic == 'mean':
-                            s = aggregates[im][it][ia][key]['standard_deviation']
-                            stddevs.append( (float(sum(s))/float(len(s))) / 2.0 )
-
-                        if ia_ref != None and ia != ia_ref:
-                            p_value = 0 #randomized_paired_sample_t_test(value_ref, value, details)
-                            print 't-test ', p_value
-                            p_values.append(p_value)
-                            if p_value < 0.05:
-                                xs_green.append(key)
-                                ys_green.append(sum(value[statistic]) / len(value[statistic]))
-                        ys.append(sum(value[statistic]) / len(value[statistic]))
-                        #if details == False:
-                        #    details = True
-         
-                    print 'plot %s | %s' % (ia, im)
-                    if 'linear' in ia:
-                        style = '-'
-                    elif 'tombstone' in ia:
-                        style = '-'
-                    else:
-                        style = '--'
-                    color = colors[index_testcase % len(colors)]
-                    if statistic == 'mean':
-                        print '*' * 64
-                        print 'xs', xs
-                        print 'ys', xs
-                        print 'stdevs', stddevs
-                        line_current = ax.errorbar(xs, ys, yerr=stddevs)#, color=color, linewidth=2)
-                        line_current = line_current[0]
-                    else:
-                        line_current, = ax.plot(xs, ys, style, color=color, linewidth=2)
-                    lines.append(line_current)
-                    names.append('%s-%s' % (ia, it))
-                    if ia != ia_ref:
-                        #print "TEST RESULTS"
-                        #print p_values
-                        #print xs_green
-                        #print ys_green
-                        ax.plot(xs_green, ys_green, linestyle='None', marker='o', color='g', markersize=3)
-
-                #plt.plot([1,2,3,4], [1,4,9,16], 'ro')
-                #plt.axis([0, 6, 0, 20])
-                #plt.show()
-
-                #print len(lines), len(names)
-                ax.set_xlabel('cycles')
-                ax.set_ylabel(im)
-                plt.title('%s of %s over %s' % (statistic, im, it))
-                plt.legend(lines, names, loc='upper left')
-                fig.set_size_inches(8, 6)
-
-                if not os.path.isdir('plots'):
-                    os.mkdir('plots')
-                plt.savefig('plots/%s_%s_%s.png' % (im, statistic, it), dpi=300)
-        #plt.show()
-
-        #pprint.pprint(aggregates)
 
 if __name__=="__main__":
     shifts = ""
     if len(sys.argv) == 5:
         shifts = sys.argv[4]
-    agg = aggregate_datapoints(sys.argv[1], sys.argv[2], sys.argv[3], shifts)
-    #plot_aggregates(agg)
+
+    agg = aggregate_datapoints(dirpath_data=sys.argv[1],
+                               testcases=sys.argv[2],
+                               algorithms=sys.argv[3],
+                               shifts=shifts)
+    plot_algorithms(agg)
     plot_robinhood(agg)
-    #pprint.pprint(agg)
