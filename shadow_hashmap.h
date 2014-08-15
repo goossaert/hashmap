@@ -77,7 +77,7 @@ private:
   Bucket* buckets_;
   uint64_t num_buckets_;
 
-  uint64_t FindEmptyBucket(uint64_t index_init);
+  uint64_t FindEmptyBucketAndDoSwaps(uint64_t index_init);
 
   uint64_t hash_function(const std::string& key) {
     static char hash[16];

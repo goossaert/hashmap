@@ -58,7 +58,7 @@ int ShadowHashMap::Get(const std::string& key, std::string* value) {
 }
 
 
-uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
+uint64_t ShadowHashMap::FindEmptyBucketAndDoSwaps(uint64_t index_init) {
   // In this function, the modulos function is being applied on indexes at the last moment,
   // when they are being used or returned. This allows to handle cases where the
   // indexes are cycling back to the beginning of the bucket array.
@@ -116,8 +116,11 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
           //fprintf(stderr, "index [%" PRIu64 "] empty [%" PRIu64 "]\n", index_init, index_empty);
           uint32_t index_temp = index_empty - size_neighborhood_ + 1;
           if (index_temp > index_init) index_temp = index_init;
-          index_temp -= 20;
-          if (index_temp < 0) index_temp = 0;
+          if (index_temp < 20) {
+            index_temp = 0;
+          } else {
+            index_temp -= 20;
+          }
           for (; index_temp <= index_empty + 20; index_temp++) {
             if (index_temp == index_empty - size_neighborhood_ + 1) {
               fprintf(stderr, "neigh ");
@@ -155,7 +158,7 @@ uint64_t ShadowHashMap::FindEmptyBucket(uint64_t index_init) {
 int ShadowHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
-  uint64_t index_empty = FindEmptyBucket(index_init);
+  uint64_t index_empty = FindEmptyBucketAndDoSwaps(index_init);
   // TODO: Put() should use Exists() and perform a replacement if needed.
   if (index_empty == num_buckets_) {
     return 1;

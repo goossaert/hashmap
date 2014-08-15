@@ -62,7 +62,7 @@ int BitmapHashMap::Get(const std::string& key, std::string* value) {
   return 1;
 }
 
-uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
+uint64_t BitmapHashMap::FindEmptyBucketAndDoSwaps(uint64_t index_init) {
   bool found = false;
   uint64_t index_current = index_init;
   for (uint32_t i = 0; i < size_probing_; i++) {
@@ -145,7 +145,7 @@ uint64_t BitmapHashMap::FindEmptyBucket(uint64_t index_init) {
 int BitmapHashMap::Put(const std::string& key, const std::string& value) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
-  uint64_t index_empty = FindEmptyBucket(index_init);
+  uint64_t index_empty = FindEmptyBucketAndDoSwaps(index_init);
 
   if (index_empty == num_buckets_) {
     return 1; 
@@ -212,7 +212,7 @@ int BitmapHashMap::Remove(const std::string& key) {
 
 int BitmapHashMap::Resize() {
   // TODO: implement
-  // If the resize is called when FindEmptyBucket() cannot perform
+  // If the resize is called when FindEmptyBucketAndDoSwaps() cannot perform
   // the necessary swaps, then make sure that the item being inserted
   // or swapped is not nullified and that it is correctly inserted
   // after the resize.
