@@ -136,7 +136,7 @@ int BackshiftHashMap::Remove(const std::string& key) {
   for (uint64_t i = 0; i < num_buckets_; i++) {
     index_current = (index_init + i) % num_buckets_;
     if (buckets_[index_current].entry == NULL) {
-      continue;
+      break;
     }
     if (   key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
