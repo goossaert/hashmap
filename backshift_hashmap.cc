@@ -131,13 +131,17 @@ int BackshiftHashMap::Remove(const std::string& key) {
   uint64_t hash = hash_function(key);
   uint64_t index_init = hash % num_buckets_;
   bool found = false;
-  uint64_t index_current;
+  uint64_t index_current = 0;
+  uint64_t probe_distance = 0;
 
   for (uint64_t i = 0; i < num_buckets_; i++) {
     index_current = (index_init + i) % num_buckets_;
-    if (buckets_[index_current].entry == NULL) {
+    FillDistanceToInitIndex(index_current, &probe_distance);
+    if (   buckets_[index_current].entry == NULL
+        || i > probe_distance) {
       break;
     }
+
     if (   key.size() == buckets_[index_current].entry->size_key
         && memcmp(buckets_[index_current].entry->data, key.c_str(), key.size()) == 0) {
       found = true;
